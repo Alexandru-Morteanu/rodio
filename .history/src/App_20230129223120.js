@@ -2,8 +2,6 @@ import React from 'react';
 import './App.css';
 import Homepage from "./pages/Homepage.js";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import PrivateRoute from './pages/Login/PrivateRoute';
-import Admin from './pages/Administrator/Admin';
 function App() {
   const stations = [
     "/96",
@@ -19,7 +17,6 @@ function App() {
             {stations.map((path) => (
               <Route path={path} element={<Homepage  />} key={path} />
             ))}
-            <PrivateRoute path="/admin" element={<Admin />} />
           </Routes>   
       </Router>
       </div>

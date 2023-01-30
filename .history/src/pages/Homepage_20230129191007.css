@@ -1,0 +1,11 @@
+.containerHome{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.vizualizer{
+    height: 30px;
+    width: 50px;
+    background-color: black;
+}

@@ -2,8 +2,13 @@ import React from 'react'
 import "./Homepage.css"
 import { Link, useLocation } from "react-router-dom";
 function Homepage() {
+  const stations = [
+    "/96",
+    "/98",
+    "/99", 
+    "/102"
+  ]
   const location = useLocation()
-  const path = location.pathname.split('/');
   return (
     <div className='containerHome'>
         <div>
