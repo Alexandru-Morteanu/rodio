@@ -1,41 +1,31 @@
 import React, { useState } from 'react'
 import "./Homepage.css"
 import { Link, useLocation } from "react-router-dom";
-import { peer, socket } from '../App';
-export let localPeerId;
+import Peer from 'peerjs';
 function Homepage() {
+  
+  
   const location = useLocation()
   const path = location.pathname.split('/');
-  let [audioElement, setAudioElement] = useState(new Audio());
-  let [localStream, setLocalStream] = useState();
-  let [k, setK] = useState(1);
+
+  let [localPeerId, setLocalPeerId] = useState('');
+  const [remotePeerId, setRemotePeerId] = useState('');
+  const [audioElement, setAudioElement] = useState(new Audio());
+  const [localStream, setLocalStream] = useState();
+  const [k, setK] = useState(1);
+
+  const peer = new Peer();
   peer.on('open', id => {
     localPeerId = id;
-    console.log(localPeerId);
   });
-  peer.on('call', call => {
-    call.answer(localStream);
-    call.on('stream', stream => {
-      //console.log(stream);
-      audioElement.srcObject = stream;
-    });
-  });
-  const handleOn = () => {
-    if (k == 1) {
-      socket.send(JSON.stringify({ id: localPeerId, chanel: path }));
-      setK(0);
-    } else {
-      audioElement.play()
-      setK(1);
-    }
-  };
+  console.log(localPeerId);
   return (
     <div className='containerHome'>
         <div>
             <b>RODIO</b>
             <Link to="/control"> CONTROL STATION </Link>
             <div className='vizualizer'></div>
-            <button onClick={ handleOn }>ON/OFF</button>
+            <button>ON/OFF</button>
             <button>Volume</button>
             <button>Next</button>
             <div>{path}</div>

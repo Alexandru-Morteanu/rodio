@@ -1,31 +1,35 @@
 import React, { useState } from 'react'
 import "./Homepage.css"
 import { Link, useLocation } from "react-router-dom";
-import { peer, socket } from '../App';
+import { peer } from '../App';
 export let localPeerId;
 function Homepage() {
+  
+  
   const location = useLocation()
   const path = location.pathname.split('/');
   let [audioElement, setAudioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
-  let [k, setK] = useState(1);
+  let [k, setK] = useState(0);
   peer.on('open', id => {
     localPeerId = id;
     console.log(localPeerId);
   });
   peer.on('call', call => {
     call.answer(localStream);
+    console.log('answer');
     call.on('stream', stream => {
-      //console.log(stream);
+      console.log(stream);
       audioElement.srcObject = stream;
+      audioElement.play();
     });
   });
   const handleOn = () => {
     if (k == 1) {
-      socket.send(JSON.stringify({ id: localPeerId, chanel: path }));
+      audioElement.play();
       setK(0);
     } else {
-      audioElement.play()
+      audioElement.pause();
       setK(1);
     }
   };

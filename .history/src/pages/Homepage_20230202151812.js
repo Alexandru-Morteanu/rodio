@@ -15,17 +15,20 @@ function Homepage() {
   });
   peer.on('call', call => {
     call.answer(localStream);
+    console.log('answer');
     call.on('stream', stream => {
       //console.log(stream);
       audioElement.srcObject = stream;
+      audioElement.pause();
     });
   });
   const handleOn = () => {
     if (k == 1) {
-      socket.send(JSON.stringify({ id: localPeerId, chanel: path }));
+      audioElement.play();
+      socket.send(localPeerId);
       setK(0);
     } else {
-      audioElement.play()
+      audioElement.pause();
       setK(1);
     }
   };

@@ -15,22 +15,13 @@ function Admin() {
     localPeerId = id;
     console.log(localPeerId);
   });
-
-  let files
   let handleFileChange = event => {
-    files = event.target.files
     localStream =  window.URL.createObjectURL(event.target.files[0]);
     audioElement.src = localStream;
     audioElement.volume = 0.2
-    setLocalStream(audioElement.captureStream());
     console.log(localStream)
   };
-  audioElement.addEventListener('ended', () => {
-    localStream =  window.URL.createObjectURL(files[1]);
-    audioElement.src = localStream;
-    console.log(localStream)
-    audioElement.play()
-  });
+
   const handleStart = () => {
     if (k == 1) {
       audioElement.play();
@@ -41,7 +32,9 @@ function Admin() {
     }
   };
 
-  
+  audioElement.addEventListener('canplay', () => {
+    setLocalStream(audioElement.captureStream());
+  });
   const handleCall = () => {
     peer.call(remotePeerId, localStream);
     console.log(remotePeerId);
@@ -56,16 +49,14 @@ function Admin() {
     }
   }
   socket.onmessage = (message) => {
-    let data = JSON.parse(message.data)
-    console.log(data.chanel[1])
-    peer.call(data.id, localStream);
+    peer.call(message.data, localStream);
   }
   return (
     <div>Admin
       <button onClick={ handleLogout }>Log Out</button>
       <button onClick={ handleCall }>Call</button>
       <button onClick={ handleStart }>Start</button>
-      <input type="file" webkitdirectory="true" onChange={handleFileChange} />
+      <input type="file" onChange={handleFileChange} />
       <Link to='96'>96</Link>
     </div>
   )

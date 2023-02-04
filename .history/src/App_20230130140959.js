@@ -8,9 +8,6 @@ import Admin from './pages/Administrator/Admin';
 import Login from './pages/Login/Login';
 import SignUp from './pages/Login/SignUp';
 import ControlStation from './pages/ControlStation/ControlStation';
-import Peer from 'peerjs';
-export const peer = new Peer();
-export const socket = new WebSocket('ws://localhost:8080');
 function App() {
   const stations = [
     "/96",
@@ -30,8 +27,8 @@ function App() {
             <AuthProvider>
               <Route path="/login" component={ Login } />
               <Route path="/signup" component={ SignUp } />
-              <PrivateRoute path="/admin" component={ Admin } />
-            </AuthProvider>
+            </AuthProvider>  
+            <PrivateRoute path="/admin" component={ Admin } />
           </Switch>   
       </Router>
       </div>

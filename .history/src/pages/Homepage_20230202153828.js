@@ -14,7 +14,6 @@ function Homepage() {
     console.log(localPeerId);
   });
   peer.on('call', call => {
-    call.answer(localStream);
     call.on('stream', stream => {
       //console.log(stream);
       audioElement.srcObject = stream;
@@ -22,7 +21,7 @@ function Homepage() {
   });
   const handleOn = () => {
     if (k == 1) {
-      socket.send(JSON.stringify({ id: localPeerId, chanel: path }));
+      socket.send(localPeerId);
       setK(0);
     } else {
       audioElement.play()
