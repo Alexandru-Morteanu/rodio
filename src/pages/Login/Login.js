@@ -1,32 +1,42 @@
-import React, { useRef, useState } from 'react'
+import axios from 'axios'
+import React, { useState } from 'react'
 import { useHistory } from 'react-router-dom'
-import { useAuth } from './AuthContext'
 
 function Login() {
-    const emailRef = useRef()
-    const passwordRef = useRef()
-    const { login } = useAuth()
-    const [loading, setLoading] = useState(false)
+    const [email, setEmail]=useState("")
+    const [password, setPassword]=useState("")
     const history = useHistory()
-
     async function handleSubmit(e) {
         e.preventDefault()
 
         try {
-        setLoading(true)
-        await login(emailRef.current.value, passwordRef.current.value)
-        history.push("/admin")
-        } catch {
-        console.log("Failed to log in")
-        }
-
-        setLoading(false)
+            axios.post("http://localhost:8000/login",{
+                email,password
+            })
+            .then(res=>{
+                console.log(res.data)
+                if (res.data === "exist")
+                {
+                    history.push("/admin", {state: {id:email}})
+                } else if(res.data === "notexist")
+                {
+                    console.log("user not found")
+                }
+        }).catch (e=>{
+            alert ("wrong details")
+            console.log(e)
+        }) 
+    }catch(e){
+        console.log(e)
+    }
     }
     return (
         <div>Login
-            <input type="email" ref={emailRef} required></input>
-            <input type="password" ref={passwordRef} required></input>
-            <button onClick={ handleSubmit } disabled={loading} type='submit'>login</button>
+            <form action= "POST">
+                <input type="email" onChange={(e)=>{setEmail(e.target.value)}} placeholder="Email" name="" id="" />
+                <input type="password" onChange={(e)=>{setPassword(e.target.value)}} placeholder="Password" name="" id="" />
+            <input type="submit" onClick={ handleSubmit } value="log"/>
+            </form>
         </div>
     )
 }
