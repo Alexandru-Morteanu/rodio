@@ -30,7 +30,7 @@ function App() {
             <AuthProvider>
               <Route path="/login" component={ Login } />
               <Route path="/signup" component={ SignUp } />
-              <Route path="/admin" component={ Admin } />
+              <PrivateRoute path="/admin" component={ Admin } />
             </AuthProvider>
           </Switch>   
       </Router>

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom';
 import { peer, socket } from '../../App';
@@ -50,7 +51,8 @@ function Admin() {
   async function handleLogout() {
     setError("")
     try {
-      await logout()
+      localStorage.removeItem("token")
+      console.log("logout")
     } catch {
       setError("Failed to log out")
     }

@@ -12,20 +12,19 @@ function Login() {
         try {
             axios.post("http://localhost:8000/login",{
                 email,password
-            })
-            .then(res=>{
-                console.log(res.data)
-                if (res.data === "exist")
+            }).then(res=>{
+                if (res.data.exist === "exist")
                 {
+                    localStorage.setItem("token", res.data.token)
                     history.push("/admin", {state: {id:email}})
-                } else if(res.data === "notexist")
+                } else if(res.data.exist === "notexist")
                 {
                     console.log("user not found")
                 }
-        }).catch (e=>{
-            alert ("wrong details")
-            console.log(e)
-        }) 
+            }).catch (e=>{
+                alert ("wrong details")
+                console.log(e)
+            }) 
     }catch(e){
         console.log(e)
     }

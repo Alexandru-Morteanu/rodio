@@ -8,7 +8,7 @@ function Login() {
     const history = useHistory()
     async function handleSubmit(e) {
         e.preventDefault()
-        if (password !== confirmPassword) {
+        if ( (password !== confirmPassword) && (password !== "")) {
           console.log("Passwords do not match");
         } else {
           try {
@@ -16,10 +16,10 @@ function Login() {
                   email,password
               })
               .then(res=>{
-                if(res.data==="exist"){
+                if(res.data.exist === "exist"){
                   console.log("User already exists")
                 }
-                else if (res.data==="notexist" ){
+                else if (res.data.exist === "notexist" ){
                   history.push("/admin", {state: {id:email}})
                 }
                 })
