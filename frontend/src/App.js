@@ -24,7 +24,7 @@ function App() {
             <Route path="/control" component={ControlStation} />
             <Route path="/login" component={Login} />
             <Route path="/signup" component={SignUp} />
-            <Route path="/market" component={MarketPlace} />
+            <Route path="/market" key="key" component={MarketPlace} />
             <PrivateRoute path="/admin" component={Admin} />
           </Switch>
         </Router>

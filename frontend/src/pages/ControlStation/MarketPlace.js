@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axiosInstance from "../Login/Axios";
 
 function MarketPlace() {
   const [stationName, setStationName] = useState("");
-  let arrStations = [];
   let [stations, setStations] = useState([]);
 
   async function handleCreateStation(e) {
@@ -12,19 +11,21 @@ function MarketPlace() {
       const res = await axiosInstance.post("/market ", {
         stationName,
       });
+      handleRefresh();
     } catch (error) {
       alert("wrong details");
       console.log(error);
     }
   }
-  async function handleRefresh(e) {
-    e.preventDefault();
+
+  useEffect(() => {
+    handleRefresh();
+  }, []);
+
+  async function handleRefresh() {
     try {
       const res = await axiosInstance.get("/market");
-      res.data.forEach((element) => {
-        setStations([arrStations]);
-        arrStations.push(element.station);
-      });
+      setStations(res.data);
     } catch (error) {
       alert("wrong details");
       console.log(error);
@@ -44,7 +45,7 @@ function MarketPlace() {
       <button onClick={handleRefresh}>REFRESH</button>
       <div>
         {stations.map((station, index) => (
-          <div key={index}>{station}</div>
+          <div key={index}>{station.station}</div>
         ))}
       </div>
     </div>

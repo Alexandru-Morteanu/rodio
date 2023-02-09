@@ -76,6 +76,7 @@ app.post("/signup", async (req, res, next) => {
 
 app.post("/market", async (req, res, next) => {
   const { stationName } = req.body;
+  console.log(stationName);
   const payload = { stationName: stationName };
   const data = {
     station: stationName,
