@@ -8,6 +8,9 @@ const stationSchema = new mongoose.Schema({
   user: {
     type: String,
   },
+  status: {
+    type: String,
+  },
 });
 const station = mongoose.model("station", stationSchema);
 module.exports = station;

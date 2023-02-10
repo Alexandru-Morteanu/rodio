@@ -9,6 +9,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     reauired: true,
   },
+  stations: [
+    {
+      type: String,
+    },
+  ],
 });
 const user = mongoose.model("user", userSchema);
 module.exports = user;

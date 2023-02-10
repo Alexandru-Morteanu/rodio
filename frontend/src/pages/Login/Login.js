@@ -13,7 +13,6 @@ function Login() {
         email,
         password,
       });
-      console.log(res);
       if (res.status === 201) {
         localStorage.setItem("token", res.data.token);
         history.push("/admin", { state: { id: email } });

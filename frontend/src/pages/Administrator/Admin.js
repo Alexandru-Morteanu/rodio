@@ -4,8 +4,7 @@ import { peer, socket } from "../../App";
 import { localPeerId as remotePeerId } from "../Homepage";
 import axiosInstance from "../Login/Axios";
 
-function Admin() {
-  const [error, setError] = useState("");
+function Admin({ location }) {
   let localPeerId;
   const [audioElement, setAudioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
@@ -56,18 +55,19 @@ function Admin() {
     console.log(localStream);
   };
   async function handleLogout() {
-    setError("");
     try {
       localStorage.removeItem("token");
       console.log("logout");
-    } catch {
-      setError("Failed to log out");
+    } catch (e) {
+      console.log(e);
     }
   }
   socket.onmessage = (message) => {
     let data = JSON.parse(message.data);
-    console.log(data.chanel[1]);
-    peer.call(data.id, localStream);
+    console.log(data.chanel);
+    if (location.state.state === data.chanel) {
+      peer.call(data.id, localStream);
+    }
   };
   return (
     <div>

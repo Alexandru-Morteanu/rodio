@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 import axiosInstance from "../Login/Axios";
-
+import "./MarketPlace.css";
 function MarketPlace() {
   const [stationName, setStationName] = useState("");
   let [stations, setStations] = useState([]);
-
+  let history = useHistory();
   async function handleCreateStation(e) {
     e.preventDefault();
     try {
-      const res = await axiosInstance.post("/market ", {
+      const res = await axiosInstance.post("/market/add", {
         stationName,
       });
       handleRefresh();
     } catch (error) {
-      alert("wrong details");
       console.log(error);
     }
   }
@@ -21,10 +21,24 @@ function MarketPlace() {
   useEffect(() => {
     handleRefresh();
   }, []);
-
+  async function handleGiveStation(station) {
+    try {
+      const res = await axiosInstance.post("/market/status", {
+        station,
+      });
+      if (res.status === 201) {
+        history.push("/admin", { state: res.data });
+      } else {
+        console.log("red");
+      }
+    } catch (error) {
+      alert("wrong");
+      console.log(error);
+    }
+  }
   async function handleRefresh() {
     try {
-      const res = await axiosInstance.get("/market");
+      const res = await axiosInstance.get("/market/add");
       setStations(res.data);
     } catch (error) {
       alert("wrong details");
@@ -42,10 +56,18 @@ function MarketPlace() {
         placeholder="Station"
       />
       <button onClick={handleCreateStation}>CREATE</button>
-      <button onClick={handleRefresh}>REFRESH</button>
-      <div>
-        {stations.map((station, index) => (
-          <div key={index}>{station.station}</div>
+      <div className="containerCards">
+        {stations.map((station) => (
+          <div
+            onClick={() => handleGiveStation(station.station)}
+            className="stationCard"
+            style={{
+              background: station.status,
+            }}
+            key={station.station}
+          >
+            {station.station}
+          </div>
         ))}
       </div>
     </div>

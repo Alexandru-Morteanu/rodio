@@ -3,8 +3,8 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const app = express();
-const userCollection = require("../modules_mongo/user");
-const stationCollection = require("../modules_mongo/station");
+const userCollection = require("./modules_mongo/user");
+const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
 
 app.use(express.json());
@@ -73,14 +73,15 @@ app.post("/signup", async (req, res, next) => {
     res.status(400);
   }
 });
-
-app.post("/market", async (req, res, next) => {
+app.post("/market/add", async (req, res, next) => {
   const { stationName } = req.body;
   console.log(stationName);
+
   const payload = { stationName: stationName };
   const data = {
     station: stationName,
     user: "",
+    status: "green",
   };
   try {
     const checkStation = await stationCollection.findOne({
@@ -101,9 +102,47 @@ app.post("/market", async (req, res, next) => {
   }
 });
 
+app.post("/market/status", async (req, res, next) => {
+  const { station } = req.body;
+  const token = req.headers.authorization;
+  try {
+    const decoded = jwt.verify(token, "secret");
+    req.email = decoded.payload.email;
+    console.log(req.email);
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    console.log(findStation.status);
+    if (!findStation) {
+      console.log("dont exist");
+      res.status(400);
+    } else {
+      if (findStation.status === "green") {
+        await stationCollection.updateOne(
+          { _id: findStation._id },
+          { $set: { status: "red" } }
+        );
+        await stationCollection.updateOne(
+          { _id: findStation._id },
+          { $set: { user: req.email } }
+        );
+        await userCollection.updateOne(
+          { email: req.email },
+          { $push: { stations: findStation.station } }
+        );
+        res.status(201).json(findStation.station);
+      } else {
+        res.json("busy");
+      }
+    }
+  } catch (e) {
+    next(e);
+    res.status(400);
+  }
+});
+
 const verifyJWT = (req, res, next) => {
   const token = req.headers.authorization;
-  console.log(token);
   if (!token) {
     return res.status(401).send({ error: "Token is required" });
   }
@@ -111,17 +150,28 @@ const verifyJWT = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, "secret");
     req.user = decoded.payload.email;
-    console.log(req.user);
     next();
   } catch (error) {
     return res.status(401).send({ error: "Invalid token" });
   }
 };
 
-app.get("/market", verifyJWT, async (req, res) => {
+app.get("/market/add", verifyJWT, async (req, res) => {
   try {
     const stations = await stationCollection.find();
     res.json(stations);
+  } catch (error) {
+    res.status(500).json("error");
+  }
+});
+
+app.get("/market/status", async (req, res) => {
+  const { station } = req;
+  try {
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    console.log(findStation);
   } catch (error) {
     res.status(500).json("error");
   }

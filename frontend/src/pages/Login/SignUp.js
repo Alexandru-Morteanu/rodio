@@ -19,6 +19,7 @@ function Login() {
         if (res.status === 400) {
           console.log("User already exists");
         } else {
+          localStorage.setItem("token", res.data.token);
           history.push("/admin", { state: { id: email } });
         }
       } catch (e) {
