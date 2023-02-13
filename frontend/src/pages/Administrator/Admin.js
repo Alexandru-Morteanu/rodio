@@ -1,33 +1,49 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useHistory, useLocation } from "react-router-dom";
 import { peer, socket } from "../../App";
 import { localPeerId as remotePeerId } from "../Homepage";
 import axiosInstance from "../Login/Axios";
 
 function Admin({ location }) {
   let localPeerId;
-  const [audioElement, setAudioElement] = useState(new Audio());
+  const [audioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
+  let [files, setFiles] = useState();
   const [k, setK] = useState(1);
-  const [email, setEmail] = useState("");
+  const locations = useLocation();
+  let history = useHistory();
+  let path = locations.pathname.split("/");
+  path = path[2];
 
-  async function handleEMAIL() {
+  useEffect(() => {
+    handleRefresh();
+  }, []);
+
+  async function handleRefresh() {
     try {
       const res = await axiosInstance.get("/admin");
-      console.log(res.data.success);
-    } catch (e) {
-      console.log(e);
+      const searchResults = res.data.filter((string) => {
+        return string.includes(path);
+      });
+      if (searchResults[0]) {
+        console.log("exist");
+      } else {
+        console.log("not found");
+        history.push("/96");
+      }
+    } catch (error) {
+      alert("wrong details");
+      console.log(error);
     }
   }
+
   peer.on("open", (id) => {
     localPeerId = id;
     console.log(localPeerId);
   });
-
-  let files;
   let handleFileChange = (event) => {
-    files = event.target.files;
-    localStream = window.URL.createObjectURL(event.target.files[0]);
+    setFiles(event.target.files);
+    localStream = URL.createObjectURL(event.target.files[0]);
     audioElement.src = localStream;
     audioElement.volume = 0.2;
     setLocalStream(audioElement.captureStream());
@@ -49,11 +65,17 @@ function Admin({ location }) {
     }
   };
 
-  const handleCall = () => {
-    peer.call(remotePeerId, localStream);
-    console.log(remotePeerId);
-    console.log(localStream);
-  };
+  async function handleDeposit() {
+    const formData = new FormData();
+    formData.append("audio", files[0]);
+    try {
+      const res = await axiosInstance.post("/upload", formData);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async function handleLogout() {
     try {
       localStorage.removeItem("token");
@@ -62,21 +84,23 @@ function Admin({ location }) {
       console.log(e);
     }
   }
+
   socket.onmessage = (message) => {
     let data = JSON.parse(message.data);
     console.log(data.chanel);
+    console.log(location);
     if (location.state.state === data.chanel) {
       peer.call(data.id, localStream);
     }
   };
+
   return (
     <div>
       Admin
       <button onClick={handleLogout}>Log Out</button>
-      <button onClick={handleCall}>Call</button>
+      <button onClick={handleDeposit}>Deposit</button>
       <button onClick={handleStart}>Start</button>
-      <button onClick={handleEMAIL}>EMAIL</button>
-      <input type="file" webkitdirectory="true" onChange={handleFileChange} />
+      <input type="file" onChange={handleFileChange} />
       <Link to="96">96</Link>
     </div>
   );

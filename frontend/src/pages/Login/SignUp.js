@@ -6,6 +6,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const history = useHistory();
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (password !== confirmPassword && password !== "") {
@@ -19,8 +20,9 @@ function Login() {
         if (res.status === 400) {
           console.log("User already exists");
         } else {
+          console.log(res.data.token);
           localStorage.setItem("token", res.data.token);
-          history.push("/admin", { state: { id: email } });
+          history.push("/market", { state: { token: res.data.token } });
         }
       } catch (e) {
         console.log("wrong details");
@@ -31,7 +33,7 @@ function Login() {
   return (
     <div>
       SignUp
-      <form action="POST" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           type="email"
           onChange={(e) => {

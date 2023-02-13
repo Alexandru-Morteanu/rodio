@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 const userCollection = require("./modules_mongo/user");
 const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
@@ -24,7 +26,38 @@ async function connectToMongoDB() {
   }
 }
 connectToMongoDB();
+/*
+import multer from 'multer'
+import { scryptSync, createCipheriv } from 'crypto'
+import { mkdirSync, existsSync, writeFileSync } from 'fs'
 
+const upload = multer({ storage: multer.memoryStorage() })
+
+const encrypt = (buffer) => {
+  const algorithm = 'aes-192-cbc'
+  const iv = Buffer.alloc(16, 0)
+  const key = scryptSync('super strong password', 'salt', 24)
+
+  const cipher = createCipheriv(algorithm, key, iv)
+  return Buffer.concat([cipher.update(buffer), cipher.final()])
+}
+
+const saveEncryptedFile = (buffer, filePath) => {
+  if (!existsSync(path.dirname(filePath))) {
+    mkdirSync(path.dirname(filePath))
+  }
+  writeFileSync(filePath, encrypt(buffer))
+}
+*/
+
+app.post("/upload", upload.single("audio"), async (req, res) => {
+  const audio = req.file;
+  console.log(req.email);
+  // await stationCollection.updateOne(
+  //   { station: req.email },
+  //   { $push: { stations: findStation.station } }
+  // );
+});
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const payload = { email: email };
@@ -73,6 +106,7 @@ app.post("/signup", async (req, res, next) => {
     res.status(400);
   }
 });
+
 app.post("/market/add", async (req, res, next) => {
   const { stationName } = req.body;
   console.log(stationName);
@@ -103,12 +137,11 @@ app.post("/market/add", async (req, res, next) => {
 });
 
 app.post("/market/status", async (req, res, next) => {
-  const { station } = req.body;
-  const token = req.headers.authorization;
+  const { station, token } = req.body;
   try {
     const decoded = jwt.verify(token, "secret");
     req.email = decoded.payload.email;
-    console.log(req.email);
+    console.log("decoded=" + req.email);
     const findStation = await stationCollection.findOne({
       station: station,
     });
@@ -142,7 +175,9 @@ app.post("/market/status", async (req, res, next) => {
 });
 
 const verifyJWT = (req, res, next) => {
-  const token = req.headers.authorization;
+  let token = req.headers.authorization;
+  console.log(token);
+
   if (!token) {
     return res.status(401).send({ error: "Token is required" });
   }
@@ -158,6 +193,7 @@ const verifyJWT = (req, res, next) => {
 
 app.get("/market/add", verifyJWT, async (req, res) => {
   try {
+    console.log(req.user);
     const stations = await stationCollection.find();
     res.json(stations);
   } catch (error) {
@@ -165,20 +201,25 @@ app.get("/market/add", verifyJWT, async (req, res) => {
   }
 });
 
-app.get("/market/status", async (req, res) => {
-  const { station } = req;
+app.get("/", async (req, res) => {
   try {
-    const findStation = await stationCollection.findOne({
-      station: station,
-    });
-    console.log(findStation);
+    const stations = await stationCollection.find();
+    res.json(stations);
   } catch (error) {
     res.status(500).json("error");
   }
 });
 
-app.get("/admin", verifyJWT, (req, res) => {
-  res.send({ success: "Valid user" });
+app.get("/admin", verifyJWT, async (req, res) => {
+  console.log(req.user);
+  try {
+    const findStation = await userCollection.findOne({
+      email: req.user,
+    });
+    res.json(findStation.stations);
+  } catch (error) {
+    res.status(500).json("error");
+  }
 });
 
 const generateToken = (payload) => {

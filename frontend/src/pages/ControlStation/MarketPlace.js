@@ -23,8 +23,11 @@ function MarketPlace() {
   }, []);
   async function handleGiveStation(station) {
     try {
+      const token = localStorage.getItem("token");
+      console.log(token);
       const res = await axiosInstance.post("/market/status", {
         station,
+        token,
       });
       if (res.status === 201) {
         history.push("/admin", { state: res.data });
