@@ -3,13 +3,13 @@ import { Link, useHistory, useLocation } from "react-router-dom";
 import { peer, socket } from "../../App";
 import axiosInstance from "../Login/Axios";
 
-function Admin({ location }) {
+function Admin() {
   let localPeerId;
   const [audioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
   let [files, setFiles] = useState();
   let [uploads, setUploads] = useState([]);
-  let users = [];
+  let [users, setUsers] = useState([]);
   let [index, setIndex] = useState(0);
   let [indexLength, setIndexLength] = useState(0);
   const [k, setK] = useState(1);
@@ -17,9 +17,32 @@ function Admin({ location }) {
   let history = useHistory();
   let path = locations.pathname.split("/");
   path = path[2];
-
+  useEffect(() => {
+    if (localStream) {
+      users.forEach((userId, index) => {
+        setTimeout(() => {
+          peer.call(userId, localStream);
+          console.log(localStream);
+          console.log("|///|");
+        }, (index + 1) * 100);
+      });
+    }
+  }, [localStream]);
+  socket.on("peerId", (id) => {
+    users.forEach((userId, index) => {
+      setTimeout(() => {
+        peer.call(userId, localStream);
+        console.log(localStream);
+        console.log("|///|");
+      }, (index + 1) * 100);
+    });
+  });
   useEffect(() => {
     handleRefresh();
+    socket.on("peerId", (id) => {
+      users = id;
+      setUsers(id);
+    });
     audioElement.onended = async () => {
       if (index < indexLength - 1) {
         index++;
@@ -35,11 +58,12 @@ function Admin({ location }) {
         responseType: "blob",
       });
       audioElement.src = URL.createObjectURL(res.data);
+      localStream = audioElement.captureStream();
       audioElement.volume = 0.05;
-      audioElement.currentTime = 215;
-      setLocalStream(audioElement.captureStream());
-      console.log(audioElement.captureStream());
+      audioElement.currentTime = 20;
       audioElement.play();
+      setLocalStream(localStream);
+      console.log(users);
     };
   }, []);
 
@@ -65,8 +89,8 @@ function Admin({ location }) {
           responseType: "blob",
         });
         audioElement.src = URL.createObjectURL(fileRes.data);
-        audioElement.currentTime = 215;
         audioElement.volume = 0.05;
+        audioElement.currentTime = 215;
         setLocalStream(audioElement.captureStream());
       }
       const req = await axiosInstance.get("/uploads", {
@@ -85,14 +109,19 @@ function Admin({ location }) {
 
   peer.on("open", (id) => {
     localPeerId = id;
+    console.log(id);
+    socket.emit("joinRoom", path, localPeerId);
   });
-
   let handleFileChange = (event) => {
     setFiles(event.target.files);
   };
 
   const handleStart = () => {
-    if (k == 1) {
+    if (k === 1) {
+      users.forEach((userId) => {
+        peer.call(userId, localStream);
+        console.log("send->" + userId);
+      });
       audioElement.play();
       setK(0);
     } else {

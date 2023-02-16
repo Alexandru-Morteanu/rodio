@@ -2,7 +2,11 @@ const express = require("express");
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
-const io = require("socket.io")(server);
+const cors = require("cors");
+const io = require("socket.io")(server, {
+  cors: { origin: "*" },
+});
+app.use(cors());
 
 const port = 9000;
 
@@ -12,6 +16,23 @@ server.listen(port, () => {
 
 io.on("connection", (socket) => {
   console.log("New client connected");
+
+  socket.on("joinRoom", (room, localPeerId) => {
+    socket.data.localPeerId = localPeerId;
+    socket.join(room);
+    console.log(`----->Client joined room ${room}`);
+    const getRoom = io.sockets.adapter.rooms.get(room);
+    let socketa = [];
+    for (const socketId of getRoom) {
+      socketa.push(io.sockets.sockets.get(socketId).data.localPeerId);
+    }
+    io.to(room).emit("peerId", socketa);
+  });
+
+  socket.on("sendMessageToRoom", (room, message) => {
+    io.to(room).emit("newMessage", message);
+    console.log(`Sent new message to room ${room}: ${message}`);
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
