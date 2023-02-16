@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useHistory, useLocation } from "react-router-dom";
 import { peer, socket } from "../../App";
-import { localPeerId as remotePeerId } from "../Homepage";
 import axiosInstance from "../Login/Axios";
 
 function Admin({ location }) {
@@ -9,6 +8,10 @@ function Admin({ location }) {
   const [audioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
   let [files, setFiles] = useState();
+  let [uploads, setUploads] = useState([]);
+  let users = [];
+  let [index, setIndex] = useState(0);
+  let [indexLength, setIndexLength] = useState(0);
   const [k, setK] = useState(1);
   const locations = useLocation();
   let history = useHistory();
@@ -17,6 +20,27 @@ function Admin({ location }) {
 
   useEffect(() => {
     handleRefresh();
+    audioElement.onended = async () => {
+      if (index < indexLength - 1) {
+        index++;
+      } else {
+        index = 0;
+      }
+      console.log(index);
+      const res = await axiosInstance.get("/upload", {
+        params: {
+          station: path,
+          index: index,
+        },
+        responseType: "blob",
+      });
+      audioElement.src = URL.createObjectURL(res.data);
+      audioElement.volume = 0.05;
+      audioElement.currentTime = 215;
+      setLocalStream(audioElement.captureStream());
+      console.log(audioElement.captureStream());
+      audioElement.play();
+    };
   }, []);
 
   async function handleRefresh() {
@@ -31,30 +55,42 @@ function Admin({ location }) {
         console.log("not found");
         history.push("/96");
       }
+      console.log(index);
+      if (index === 0) {
+        const fileRes = await axiosInstance.get("/upload", {
+          params: {
+            station: path,
+            index: index,
+          },
+          responseType: "blob",
+        });
+        audioElement.src = URL.createObjectURL(fileRes.data);
+        audioElement.currentTime = 215;
+        audioElement.volume = 0.05;
+        setLocalStream(audioElement.captureStream());
+      }
+      const req = await axiosInstance.get("/uploads", {
+        params: {
+          station: path,
+        },
+      });
+      indexLength = req.data.indexLength;
+      console.log(indexLength);
+      setUploads(req.data.names);
     } catch (error) {
-      alert("wrong details");
+      //alert("wrong details");
       console.log(error);
     }
   }
 
   peer.on("open", (id) => {
     localPeerId = id;
-    console.log(localPeerId);
   });
+
   let handleFileChange = (event) => {
     setFiles(event.target.files);
-    localStream = URL.createObjectURL(event.target.files[0]);
-    audioElement.src = localStream;
-    audioElement.volume = 0.2;
-    setLocalStream(audioElement.captureStream());
-    console.log(localStream);
   };
-  audioElement.addEventListener("ended", () => {
-    localStream = window.URL.createObjectURL(files[1]);
-    audioElement.src = localStream;
-    console.log(localStream);
-    audioElement.play();
-  });
+
   const handleStart = () => {
     if (k == 1) {
       audioElement.play();
@@ -67,12 +103,34 @@ function Admin({ location }) {
 
   async function handleDeposit() {
     const formData = new FormData();
-    formData.append("audio", files[0]);
+    for (let i = 0; i < files.length; i++) {
+      formData.append("audio", files[i]);
+    }
+    formData.append("station", path);
     try {
       const res = await axiosInstance.post("/upload", formData);
-      console.log(res);
+      //audioElement.play();
+      handleRefresh();
+      try {
+        audioElement.play();
+      } catch (e) {
+        console.log(e);
+      }
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async function handleDeleteSong(index) {
+    try {
+      const res = await axiosInstance.post("/deletesong", {
+        station: path,
+        index: index,
+      });
+      handleRefresh();
+      console.log(index);
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -85,14 +143,16 @@ function Admin({ location }) {
     }
   }
 
-  socket.onmessage = (message) => {
-    let data = JSON.parse(message.data);
-    console.log(data.chanel);
-    console.log(location);
-    if (location.state.state === data.chanel) {
-      peer.call(data.id, localStream);
-    }
-  };
+  // socket.onmessage = (message) => {
+  //   let data = JSON.parse(message.data);
+  //   console.log(data);
+  //   // console.log(path);
+  //   // if (path === data.chanel) {
+  //   //   users.push(data.id);
+  //   //   peer.call(data.id, localStream);
+  //   //   console.log(localStream);
+  //   // }
+  // };
 
   return (
     <div>
@@ -100,7 +160,13 @@ function Admin({ location }) {
       <button onClick={handleLogout}>Log Out</button>
       <button onClick={handleDeposit}>Deposit</button>
       <button onClick={handleStart}>Start</button>
-      <input type="file" onChange={handleFileChange} />
+      <input type="file" webkitdirectory="true" onChange={handleFileChange} />
+      {uploads.map((upload, index) => (
+        <div key={index}>
+          {upload}
+          <button onClick={() => handleDeleteSong(index)}>delete</button>
+        </div>
+      ))}
       <Link to="96">96</Link>
     </div>
   );

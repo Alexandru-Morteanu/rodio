@@ -1,13 +1,31 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+
 const userCollection = require("./modules_mongo/user");
 const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.originalname.split(".")[0] +
+        "-" +
+        (+new Date()).toString() +
+        "." +
+        file.originalname.split(".")[1]
+    );
+  },
+  destination: function (req, file, cb) {
+    cb(null, "./uploads");
+  },
+});
+const upload = multer({ storage });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -26,37 +44,52 @@ async function connectToMongoDB() {
   }
 }
 connectToMongoDB();
-/*
-import multer from 'multer'
-import { scryptSync, createCipheriv } from 'crypto'
-import { mkdirSync, existsSync, writeFileSync } from 'fs'
+//--------------------------------------------------------------------------------
+app.post("/deletesong", async (req, res) => {
+  let { station, index } = req.body;
+  try {
+    const findStation = await stationCollection.findOne({ station: station });
 
-const upload = multer({ storage: multer.memoryStorage() })
-
-const encrypt = (buffer) => {
-  const algorithm = 'aes-192-cbc'
-  const iv = Buffer.alloc(16, 0)
-  const key = scryptSync('super strong password', 'salt', 24)
-
-  const cipher = createCipheriv(algorithm, key, iv)
-  return Buffer.concat([cipher.update(buffer), cipher.final()])
-}
-
-const saveEncryptedFile = (buffer, filePath) => {
-  if (!existsSync(path.dirname(filePath))) {
-    mkdirSync(path.dirname(filePath))
+    if (fs.existsSync(`${__dirname}/${findStation.album[index].path}`)) {
+      fs.unlink(`${__dirname}/${findStation.album[index].path}`, (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("succes");
+        }
+      });
+    }
+    await stationCollection.updateOne(
+      { station: station },
+      { $unset: { [`album.${index}`]: null } }
+    );
+    await stationCollection.updateOne(
+      { station: station },
+      { $pull: { album: null } }
+    );
+    res.send("ok");
+  } catch {
+    res.status(400).json("upload failed");
   }
-  writeFileSync(filePath, encrypt(buffer))
-}
-*/
+});
 
-app.post("/upload", upload.single("audio"), async (req, res) => {
-  const audio = req.file;
-  console.log(req.email);
-  // await stationCollection.updateOne(
-  //   { station: req.email },
-  //   { $push: { stations: findStation.station } }
-  // );
+app.post("/upload", upload.any("audio"), async (req, res) => {
+  let data = req.files.map((file) => ({
+    name: file.originalname,
+    path: file.path,
+  }));
+  const station = req.body.station;
+  console.log(station);
+  try {
+    await stationCollection.updateOne(
+      { station: station },
+      { $push: { album: { $each: data } } }
+    );
+    console.log("ok");
+    res.send("ok");
+  } catch {
+    res.status(400).json("upload failed");
+  }
 });
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -116,6 +149,9 @@ app.post("/market/add", async (req, res, next) => {
     station: stationName,
     user: "",
     status: "green",
+    album: {
+      name: "",
+    },
   };
   try {
     const checkStation = await stationCollection.findOne({
@@ -173,10 +209,9 @@ app.post("/market/status", async (req, res, next) => {
     res.status(400);
   }
 });
-
+//--------------------------------------------------------------------------------
 const verifyJWT = (req, res, next) => {
   let token = req.headers.authorization;
-  console.log(token);
 
   if (!token) {
     return res.status(401).send({ error: "Token is required" });
@@ -190,7 +225,58 @@ const verifyJWT = (req, res, next) => {
     return res.status(401).send({ error: "Invalid token" });
   }
 };
+//--------------------------------------------------------------------------------
+app.get("/upload", async (req, res) => {
+  const { station, index } = req.query;
+  console.log(station);
+  try {
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    if (findStation) {
+      const file = findStation.album[index].path;
+      console.log(`${__dirname}/${file}`);
+      fs.readFile(`${__dirname}/${file}`, (err, data) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+        res.setHeader("Content-Type", "audio/mpeg");
+        res.setHeader("Content-Length", data.length);
+        res.send(data);
+      });
+    }
+    //res.send(file);
+  } catch {}
+});
+app.get("/uploads", async (req, res) => {
+  const { station } = req.query;
+  try {
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    const names = findStation.album.map((file) => file.name);
+    console.log(names);
+    res.send({ names: names, indexLength: findStation.album.length });
 
+    /*
+    paths.map((path) => {
+      fs.readFile(`${__dirname}/${path}`, (err, dat) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+        data.push(dat);
+        if (data.length === paths.length) {
+          res.setHeader("Content-Type", "audio/mpeg");
+          res.setHeader("Content-Length", data.length);
+          res.send(data);
+        }
+      });
+    });
+    */
+  } catch {
+    res.status(400).json("upload failed");
+  }
+});
 app.get("/market/add", verifyJWT, async (req, res) => {
   try {
     console.log(req.user);

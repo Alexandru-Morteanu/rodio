@@ -17,7 +17,7 @@ import MarketPlace from "./pages/ControlStation/MarketPlace";
 import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 export const peer = new Peer();
-export const socket = new WebSocket("ws://localhost:8080");
+// export const socket = new WebSocket("ws://localhost:8080");
 function App() {
   let [stations, setStations] = useState([]);
   useEffect(() => {

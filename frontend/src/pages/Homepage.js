@@ -6,10 +6,11 @@ export let localPeerId;
 function Homepage() {
   const location = useLocation();
   const path = location.pathname.split("/");
+  let [local, setLocal] = useState();
   let [audioElement, setAudioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
   let [k, setK] = useState(0);
-
+  const val = React.useRef();
   peer.on("call", (call) => {
     call.answer(localStream);
     call.on("stream", (stream) => {
@@ -18,10 +19,21 @@ function Homepage() {
     });
   });
   peer.on("open", (id) => {
-    localPeerId = id;
-    console.log(localPeerId);
-    socket.send(JSON.stringify({ id: localPeerId, chanel: path[1] }));
+    console.log("Connected with ID:", id);
+    const room = "my-room";
+    const conn = peer.join(room);
+
+    conn.on("open", () => {
+      console.log("Joined room:", room);
+    });
   });
+  // peer.on("open", (id) => {
+  //   localPeerId = id;
+  //   setLocal(id);
+  //   console.log(localPeerId);
+  //   //socket.send(JSON.stringify({ id: localPeerId, chanel: path[1] }));
+  // });
+
   const handleOn = () => {
     if (k == 1) {
       audioElement.pause();

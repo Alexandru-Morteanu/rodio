@@ -19,7 +19,7 @@ function AdminMAIN() {
   function handleStation(station) {
     try {
       console.log(station);
-      history.push(`/admin/${station}`, { state: station });
+      history.push(`/admin/${station}`);
     } catch (e) {
       console.log(e);
     }
