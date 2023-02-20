@@ -8,7 +8,7 @@ const io = require("socket.io")(server, {
 });
 app.use(cors());
 
-const port = 9000;
+const port = 8080;
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
@@ -16,7 +16,7 @@ server.listen(port, () => {
 
 io.on("connection", (socket) => {
   console.log("New client connected");
-
+  io.emit("open");
   socket.on("joinRoom", (room, localPeerId) => {
     socket.data.localPeerId = localPeerId;
     socket.join(room);

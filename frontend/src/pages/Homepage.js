@@ -1,40 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Homepage.css";
 import { Link, useLocation } from "react-router-dom";
-import { peer, socket } from "../App";
+import { socket } from "../App";
+import Peer from "peerjs";
+import moment from "moment";
 export let localPeerId;
 function Homepage() {
+  let [peer, setPeer] = useState(null);
+  useEffect(() => {
+    let newpeer = new Peer();
+    newpeer.on("open", (id) => {
+      console.log(id);
+      localPeerId = id;
+      socket.emit("joinRoom", path[1], id);
+    });
+    socket.on("peerId", (id) => {
+      users = id;
+      console.log(users);
+    });
+    setPeer(newpeer);
+  }, []);
+  useEffect(() => {
+    console.log("--------");
+    if (peer) {
+      peer.on("call", (call) => {
+        call.answer(localStream);
+        console.log("HERE");
+        call.on("stream", (stream) => {
+          try {
+            audioElement.srcObject = stream;
+            console.log(audioElement.srcObject);
+            audioElement.play();
+          } catch (e) {
+            console.log(e);
+          }
+        });
+      });
+    }
+  }, [peer]);
+  let users = [];
   const location = useLocation();
   const path = location.pathname.split("/");
   let [localStream, setLocalStream] = useState();
   let [audioElement, setAudioElement] = useState(new Audio());
   let [k, setK] = useState(0);
-
-  peer.on("call", (call) => {
-    call.answer(localStream);
-    console.log("HERE");
-    call.on("stream", (stream) => {
-      try {
-        audioElement.srcObject = stream;
-        console.log(audioElement.srcObject);
-        audioElement.play();
-      } catch (e) {
-        console.log(e);
-      }
-    });
-  });
   useEffect(() => {
     console.log("New client connected");
     console.log(path[1]);
+    return () => {};
   }, []);
-  peer.on("open", (id) => {
-    localPeerId = id;
-    socket.emit("joinRoom", path[1], localPeerId);
-    //socket.send(JSON.stringify({ id: localPeerId, chanel: path[1] }));
-  });
-  socket.on("peerId", (id) => {
-    console.log(id);
-  });
+
   const handleOn = () => {
     if (k == 1) {
       audioElement.pause();

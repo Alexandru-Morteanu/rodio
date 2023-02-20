@@ -1,10 +1,12 @@
+import Peer from "peerjs";
 import React, { useEffect, useState } from "react";
 import { Link, useHistory, useLocation } from "react-router-dom";
-import { peer, socket } from "../../App";
+import { socket } from "../../App";
 import axiosInstance from "../Login/Axios";
 
 function Admin() {
   let localPeerId;
+  let [peer, setPeer] = useState(null);
   const [audioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
   let [files, setFiles] = useState();
@@ -28,21 +30,31 @@ function Admin() {
       });
     }
   }, [localStream]);
-  socket.on("peerId", (id) => {
-    users.forEach((userId, index) => {
-      setTimeout(() => {
-        peer.call(userId, localStream);
-        console.log(localStream);
-        console.log("|///|");
-      }, (index + 1) * 100);
-    });
-  });
   useEffect(() => {
-    handleRefresh();
+    if (users) {
+      users.forEach((userId) => {
+        setTimeout(() => {
+          peer.call(userId, localStream);
+          console.log(userId);
+          console.log(localStream);
+        }, 1000);
+      });
+    }
+  }, [users]);
+  useEffect(() => {
     socket.on("peerId", (id) => {
-      users = id;
       setUsers(id);
     });
+  }, [socket]);
+
+  useEffect(() => {
+    let newpeer = new Peer();
+    newpeer.on("open", (id) => {
+      localPeerId = id;
+      console.log(id);
+      socket.emit("joinRoom", path, localPeerId);
+    });
+    handleRefresh();
     audioElement.onended = async () => {
       if (index < indexLength - 1) {
         index++;
@@ -60,11 +72,11 @@ function Admin() {
       audioElement.src = URL.createObjectURL(res.data);
       localStream = audioElement.captureStream();
       audioElement.volume = 0.05;
-      audioElement.currentTime = 20;
       audioElement.play();
       setLocalStream(localStream);
       console.log(users);
     };
+    setPeer(newpeer);
   }, []);
 
   async function handleRefresh() {
@@ -89,8 +101,8 @@ function Admin() {
           responseType: "blob",
         });
         audioElement.src = URL.createObjectURL(fileRes.data);
-        audioElement.volume = 0.05;
         audioElement.currentTime = 215;
+        audioElement.volume = 0.05;
         setLocalStream(audioElement.captureStream());
       }
       const req = await axiosInstance.get("/uploads", {
@@ -106,19 +118,15 @@ function Admin() {
       console.log(error);
     }
   }
-
-  peer.on("open", (id) => {
-    localPeerId = id;
-    console.log(id);
-    socket.emit("joinRoom", path, localPeerId);
-  });
   let handleFileChange = (event) => {
     setFiles(event.target.files);
   };
 
   const handleStart = () => {
     if (k === 1) {
+      console.log(users);
       users.forEach((userId) => {
+        //console.log(localStream);
         peer.call(userId, localStream);
         console.log("send->" + userId);
       });
@@ -171,17 +179,6 @@ function Admin() {
       console.log(e);
     }
   }
-
-  // socket.onmessage = (message) => {
-  //   let data = JSON.parse(message.data);
-  //   console.log(data);
-  //   // console.log(path);
-  //   // if (path === data.chanel) {
-  //   //   users.push(data.id);
-  //   //   peer.call(data.id, localStream);
-  //   //   console.log(localStream);
-  //   // }
-  // };
 
   return (
     <div>

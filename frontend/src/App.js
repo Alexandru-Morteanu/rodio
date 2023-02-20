@@ -7,13 +7,11 @@ import Admin from "./pages/Administrator/Admin";
 import Login from "./pages/Login/Login";
 import SignUp from "./pages/Login/SignUp";
 import ControlStation from "./pages/ControlStation/ControlStation";
-import Peer from "peerjs";
 import io from "socket.io-client";
 import MarketPlace from "./pages/ControlStation/MarketPlace";
 import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
-export const peer = new Peer();
-export const socket = new io("http://localhost:9000");
+export const socket = new io("http://localhost:8080");
 // export const socket = new WebSocket("ws://localhost:8080");
 function App() {
   let [stations, setStations] = useState([]);
