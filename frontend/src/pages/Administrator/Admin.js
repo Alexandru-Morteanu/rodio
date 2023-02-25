@@ -85,6 +85,7 @@ function Admin() {
       const searchResults = res.data.filter((string) => {
         return string.includes(path);
       });
+      console.log(searchResults[0]);
       if (searchResults[0]) {
         console.log("exist");
       } else {
@@ -140,11 +141,14 @@ function Admin() {
 
   async function handleDeposit() {
     const formData = new FormData();
+
     for (let i = 0; i < files.length; i++) {
       formData.append("audio", files[i]);
+      console.log(formData);
     }
     formData.append("station", path);
     try {
+      console.log(formData);
       const res = await axiosInstance.post("/upload", formData);
       //audioElement.play();
       handleRefresh();
@@ -193,6 +197,7 @@ function Admin() {
           <button onClick={() => handleDeleteSong(index)}>delete</button>
         </div>
       ))}
+      <Link to={`/admin/${path}/sell`}>SELL</Link>
       <Link to="96">96</Link>
     </div>
   );

@@ -1,0 +1,32 @@
+.stationCard{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 15px;
+    box-shadow: 0 0 20px black;
+    height: 40px;
+    width: 100px;
+    margin: 2px;
+    cursor: pointer;
+
+}
+.name{
+    font-size: 30px;
+}
+.containerer{
+    width: 90%;
+    height: 90%;
+}
+.stationCard:hover{
+    opacity: 0.9;
+}
+.containerCards{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px;
+    flex-wrap: wrap;
+}
+.MuiFormControl-root{
+    border-color: black;
+  }

@@ -3,9 +3,9 @@ const cors = require("cors");
 const fs = require("fs");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
+const paypal = require("paypal-rest-sdk");
 const jwt = require("jsonwebtoken");
 const app = express();
-
 const userCollection = require("./modules_mongo/user");
 const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
@@ -31,6 +31,45 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+paypal.configure({
+  mode: "sandbox", // sandbox or live
+  client_id:
+    "AaRTEhtrTxRD8uZ9LsieYK_o_YmNnGuCLJj7gOWFBDeg9W-SxLXajlZ9YSxjt0estoJUarlgjGFKMcIc",
+  client_secret:
+    "EK856vpjwZ4xeJfU7QQHXvDA017iKYIczuzx6uFuY1BYYAkw8HjBMs8kvMuu-hZik9DlzAqs_No8988h",
+});
+
+const sendPayment = (recipientEmail, amount, currency) => {
+  return new Promise((resolve, reject) => {
+    const senderBatchId = Math.random().toString(36).substring(9); // Generate a unique ID for the transaction
+    const request = {
+      sender_batch_header: {
+        sender_batch_id: senderBatchId,
+        email_subject: "Payment from my app",
+      },
+      items: [
+        {
+          recipient_type: "EMAIL",
+          amount: {
+            value: amount,
+            currency: currency,
+          },
+          note: "Thanks for using my app!",
+          sender_item_id: "payment_" + Math.random().toString(36).substring(9),
+          receiver: recipientEmail,
+        },
+      ],
+    };
+
+    paypal.payout.create(request, (error, payout) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(payout);
+      }
+    });
+  });
+};
 async function connectToMongoDB() {
   try {
     await mongoose.connect("mongodb://localhost:27017/rodio", {
@@ -45,6 +84,12 @@ async function connectToMongoDB() {
 }
 connectToMongoDB();
 //--------------------------------------------------------------------------------
+app.post("/sell", async (req, res) => {
+  const { token } = req.body;
+  sendPayment("sb-wk7c4725139615@personal.example.com", 10, "USD")
+    .then((payout) => console.log(payout))
+    .catch((error) => console.error(error));
+});
 app.post("/deletesong", async (req, res) => {
   let { station, index } = req.body;
   try {
@@ -125,14 +170,19 @@ app.post("/signup", async (req, res, next) => {
     password: hashedPassword,
   };
   try {
-    const checkUser = await userCollection.findOne({ email: email });
-    if (checkUser) {
-      res.status(400);
+    console.log("---->" + email);
+    if (!email) {
+      res.status(500);
     } else {
-      res.status(201).json({
-        token: generateToken(payload),
-      });
-      await userCollection.insertMany([data]);
+      const checkUser = await userCollection.findOne({ email: email });
+      if (checkUser) {
+        res.status(400);
+      } else {
+        res.status(201).json({
+          token: generateToken(payload),
+        });
+        await userCollection.insertMany([data]);
+      }
     }
   } catch (e) {
     next(e);
@@ -148,7 +198,7 @@ app.post("/market/add", async (req, res, next) => {
   const data = {
     station: stationName,
     user: "",
-    status: "green",
+    status: "rgb(13, 255, 0)",
     album: {
       name: "",
     },
@@ -186,7 +236,7 @@ app.post("/market/status", async (req, res, next) => {
       console.log("dont exist");
       res.status(400);
     } else {
-      if (findStation.status === "green") {
+      if (findStation.status === "rgb(13, 255, 0)") {
         await stationCollection.updateOne(
           { _id: findStation._id },
           { $set: { status: "red" } }
@@ -235,15 +285,27 @@ app.get("/upload", async (req, res) => {
     });
     if (findStation) {
       const file = findStation.album[index].path;
-      console.log(`${__dirname}/${file}`);
-      fs.readFile(`${__dirname}/${file}`, (err, data) => {
-        if (err) {
-          return res.status(500).send(err);
-        }
-        res.setHeader("Content-Type", "audio/mpeg");
-        res.setHeader("Content-Length", data.length);
-        res.send(data);
-      });
+      if (!file) {
+        await stationCollection.updateOne(
+          { station: station },
+          { $unset: { [`album.${index}`]: null } }
+        );
+        await stationCollection.updateOne(
+          { station: station },
+          { $pull: { album: null } }
+        );
+        console.log("del");
+      } else {
+        console.log(`${__dirname}/${file}`);
+        fs.readFile(`${__dirname}/${file}`, (err, data) => {
+          if (err) {
+            return res.status(500).send(err);
+          }
+          res.setHeader("Content-Type", "audio/mpeg");
+          res.setHeader("Content-Length", data.length);
+          res.send(data);
+        });
+      }
     }
     //res.send(file);
   } catch {}

@@ -1,0 +1,35 @@
+.containerMAIN{
+    height: 90%;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+}
+.nameAdmin{
+    font-size: 30px;
+}
+.mystations:hover{
+    opacity: 0.7;
+}
+.mystcontainer{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.mystations{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgb(255, 255, 255);
+    height: 40px;
+    width: 100px;
+    margin: 2px;
+    cursor: pointer;
+    background: black;
+    color: white;
+}

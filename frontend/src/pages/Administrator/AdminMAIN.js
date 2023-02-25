@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import axiosInstance from "../Login/Axios";
-
+import Button from "@mui/material/Button";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import "./AdminMAIN.css";
 function AdminMAIN() {
   let [stations, setStations] = useState([]);
   let history = useHistory();
@@ -25,18 +27,33 @@ function AdminMAIN() {
     }
   }
   return (
-    <div>
-      AdminMAIN
-      {stations.map((station) => (
-        <button
-          onClick={() => {
-            handleStation(station);
-          }}
-          key={station}
-        >
-          {station}
-        </button>
-      ))}
+    <div className="containerMAIN">
+      <b className="nameAdmin">Admin</b>
+      <div className="mystcontainer">
+        {stations.map((station) => (
+          <div
+            className="mystations"
+            onClick={() => {
+              handleStation(station);
+            }}
+            key={station}
+          >
+            {station}
+          </div>
+        ))}
+      </div>
+      <Button
+        variant="contained"
+        startIcon={<ShoppingCartIcon />}
+        href="/market"
+        style={{
+          width: "200px",
+          height: "50px",
+          backgroundColor: "rgb(215, 158, 0)",
+        }}
+      >
+        Get More
+      </Button>
     </div>
   );
 }

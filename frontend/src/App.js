@@ -6,13 +6,12 @@ import PrivateRoute from "./pages/Login/PrivateRoute";
 import Admin from "./pages/Administrator/Admin";
 import Login from "./pages/Login/Login";
 import SignUp from "./pages/Login/SignUp";
-import ControlStation from "./pages/ControlStation/ControlStation";
 import io from "socket.io-client";
-import MarketPlace from "./pages/ControlStation/MarketPlace";
+import MarketPlace from "./pages/MarketPlace/MarketPlace";
 import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
+import AdminSELL from "./pages/Administrator/AdminSELL";
 export const socket = new io("http://localhost:8080");
-// export const socket = new WebSocket("ws://localhost:8080");
 function App() {
   let [stations, setStations] = useState([]);
   useEffect(() => {
@@ -38,15 +37,22 @@ function App() {
                 key={path.station}
               />
             ))}
-            <Route path="/control" component={ControlStation} />
             <Route path="/login" component={Login} />
             <Route path="/signup" component={SignUp} />
             <Route path="/market" key="key" component={MarketPlace} />
             <PrivateRoute exact path="/admin" component={AdminMAIN} />
             {stations.map((path) => (
               <PrivateRoute
+                exact
                 path={`/admin/${path.station}`}
                 component={Admin}
+                key={path.station}
+              />
+            ))}
+            {stations.map((path) => (
+              <PrivateRoute
+                path={`/admin/${path.station}/sell`}
+                component={AdminSELL}
                 key={path.station}
               />
             ))}
