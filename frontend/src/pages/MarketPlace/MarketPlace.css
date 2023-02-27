@@ -5,10 +5,9 @@
     border-radius: 15px;
     box-shadow: 0 0 20px black;
     height: 40px;
-    width: 100px;
-    margin: 2px;
+    width: 90px;
+    margin: 17px;
     cursor: pointer;
-
 }
 .name{
     font-size: 30px;
@@ -22,11 +21,17 @@
 }
 .containerCards{
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 10px;
     flex-wrap: wrap;
+    justify-content: center;
+}
+.scrollable{
+    overflow: auto;
+    height: 380px;
 }
 .MuiFormControl-root{
     border-color: black;
-  }
+}
+.buttons_market{
+    position: absolute;
+    width: 90%;
+}

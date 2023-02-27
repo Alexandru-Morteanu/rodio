@@ -84,17 +84,57 @@ async function connectToMongoDB() {
 }
 connectToMongoDB();
 //--------------------------------------------------------------------------------
+app.post("/sold", async (req, res) => {
+  const { station, token } = req.body;
+  try {
+    const decoded = jwt.verify(token, "secret");
+    const newEmail = decoded.payload.email;
+    const findStation = await stationCollection.findOne({ station: station });
+    const oldEmail = findStation.user;
+    sendPayment("vreuBani@personal.example.com", findStation.price, "USD")
+      .then((payout) => console.log(payout))
+      .catch((error) => console.error(error));
+    await stationCollection.updateOne(
+      { station: station },
+      { $set: { user: newEmail, status: "red", paypalEmail: "", price: "" } }
+    );
+    await userCollection.updateOne(
+      { email: oldEmail },
+      { $pull: { stations: station } }
+    );
+    await userCollection.updateOne(
+      { email: newEmail },
+      { $push: { stations: station } }
+    );
+
+    res.json("GO");
+  } catch {}
+});
 app.post("/sell", async (req, res) => {
-  const { token } = req.body;
-  sendPayment("sb-wk7c4725139615@personal.example.com", 10, "USD")
-    .then((payout) => console.log(payout))
-    .catch((error) => console.error(error));
+  const { path, paypalEmail, price } = req.body;
+  try {
+    const findStation = await stationCollection.findOne({ station: path });
+    console.log(findStation);
+    await stationCollection.updateOne(
+      { station: findStation.station },
+      { $set: { paypalEmail: paypalEmail, price: price } }
+    );
+    await stationCollection.updateOne(
+      { _id: findStation._id },
+      { $set: { status: "rgb(255, 185, 0)" } }
+    );
+    res.json("ok");
+  } catch {
+    res.status(400).json("upload failed");
+  }
+  // sendPayment("sb-wk7c4725139615@personal.example.com", 10, "USD")
+  //   .then((payout) => console.log(payout))
+  //   .catch((error) => console.error(error));
 });
 app.post("/deletesong", async (req, res) => {
   let { station, index } = req.body;
   try {
     const findStation = await stationCollection.findOne({ station: station });
-
     if (fs.existsSync(`${__dirname}/${findStation.album[index].path}`)) {
       fs.unlink(`${__dirname}/${findStation.album[index].path}`, (err) => {
         if (err) {
@@ -227,7 +267,6 @@ app.post("/market/status", async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, "secret");
     req.email = decoded.payload.email;
-    console.log("decoded=" + req.email);
     const findStation = await stationCollection.findOne({
       station: station,
     });
@@ -236,22 +275,29 @@ app.post("/market/status", async (req, res, next) => {
       console.log("dont exist");
       res.status(400);
     } else {
-      if (findStation.status === "rgb(13, 255, 0)") {
-        await stationCollection.updateOne(
-          { _id: findStation._id },
-          { $set: { status: "red" } }
-        );
-        await stationCollection.updateOne(
-          { _id: findStation._id },
-          { $set: { user: req.email } }
-        );
-        await userCollection.updateOne(
-          { email: req.email },
-          { $push: { stations: findStation.station } }
-        );
-        res.status(201).json(findStation.station);
+      if (
+        findStation.status === "rgb(13, 255, 0)" ||
+        findStation.user === req.email
+      ) {
+        if (findStation.status === "rgb(13, 255, 0)") {
+          await stationCollection.updateOne(
+            { _id: findStation._id },
+            { $set: { status: "red" } }
+          );
+          await stationCollection.updateOne(
+            { _id: findStation._id },
+            { $set: { user: req.email } }
+          );
+          await userCollection.updateOne(
+            { email: req.email },
+            { $push: { stations: findStation.station } }
+          );
+        }
+        res.status(200).json(findStation.station);
+      } else if (findStation.status === "rgb(255, 185, 0)") {
+        res.status(201).json(findStation.price);
       } else {
-        res.json("busy");
+        res.status(202).json("busy");
       }
     }
   } catch (e) {
@@ -276,7 +322,22 @@ const verifyJWT = (req, res, next) => {
   }
 };
 //--------------------------------------------------------------------------------
-app.get("/upload", async (req, res) => {
+app.get("/sell", verifyJWT, async (req, res) => {
+  const { station } = req.query;
+  try {
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    console.log(findStation);
+    res.json({
+      paypalEmail: findStation.paypalEmail,
+      price: findStation.price,
+    });
+  } catch {
+    res.status(400);
+  }
+});
+app.get("/upload", verifyJWT, async (req, res) => {
   const { station, index } = req.query;
   console.log(station);
   try {

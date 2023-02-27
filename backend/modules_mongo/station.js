@@ -22,6 +22,12 @@ const stationSchema = new mongoose.Schema({
       type: albumSchema,
     },
   ],
+  paypalEmail: {
+    type: String,
+  },
+  price: {
+    type: String,
+  },
 });
 
 const station = mongoose.model("station", stationSchema);

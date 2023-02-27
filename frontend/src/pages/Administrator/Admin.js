@@ -1,19 +1,27 @@
+import { Alert, Box, Button, IconButton, Modal } from "@mui/material";
+import InputAdornment from "@mui/material/InputAdornment";
+import Typography from "@mui/material/Typography";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Peer from "peerjs";
 import React, { useEffect, useState } from "react";
-import { Link, useHistory, useLocation } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { socket } from "../../App";
 import axiosInstance from "../Login/Axios";
-
+import "./Admin.css";
+import { createCssTextField } from "../MarketPlace/MarketPlace";
+const WhiteCssTextField = createCssTextField("white");
 function Admin() {
   let localPeerId;
   let [peer, setPeer] = useState(null);
   const [audioElement] = useState(new Audio());
   let [localStream, setLocalStream] = useState();
+  const [paypalEmail, setPayPalEmail] = useState("");
   let [files, setFiles] = useState();
   let [uploads, setUploads] = useState([]);
   let [users, setUsers] = useState([]);
   let [index, setIndex] = useState(0);
   let [indexLength, setIndexLength] = useState(0);
+  let [active, setActive] = useState(true);
   const [k, setK] = useState(1);
   const locations = useLocation();
   let history = useHistory();
@@ -81,6 +89,13 @@ function Admin() {
 
   async function handleRefresh() {
     try {
+      const r = await axiosInstance.get("/sell", {
+        params: {
+          station: path,
+        },
+      });
+      setPayPalEmail(r.data.paypalEmail);
+      setPrice(r.data.price);
       const res = await axiosInstance.get("/admin");
       const searchResults = res.data.filter((string) => {
         return string.includes(path);
@@ -183,22 +198,196 @@ function Admin() {
       console.log(e);
     }
   }
-
+  const anchors = document.querySelector(".on-air");
+  useEffect(() => {
+    if (anchors) {
+      anchors.addEventListener("click", () => {
+        if (!active) {
+          anchors.classList.add("inactive");
+          anchors.classList.remove("active");
+        } else {
+          anchors.classList.add("active");
+          anchors.classList.remove("inactive");
+        }
+        active = !active;
+      });
+    }
+  }, [anchors]);
+  const [open, setOpen] = useState(false);
+  const [price, setPrice] = useState("");
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const [isSaved, setIsSaved] = useState(false);
+  async function handlePrice() {
+    try {
+      if (paypalEmail && price) {
+        console.log(paypalEmail);
+        console.log(price);
+        setIsSaved(true);
+        setTimeout(() => {
+          setIsSaved(false);
+        }, 1800);
+        const res = await axiosInstance.post("/sell", {
+          path,
+          paypalEmail,
+          price,
+        });
+      }
+    } catch {}
+  }
   return (
-    <div>
-      Admin
-      <button onClick={handleLogout}>Log Out</button>
-      <button onClick={handleDeposit}>Deposit</button>
-      <button onClick={handleStart}>Start</button>
-      <input type="file" webkitdirectory="true" onChange={handleFileChange} />
-      {uploads.map((upload, index) => (
-        <div key={index}>
-          {upload}
-          <button onClick={() => handleDeleteSong(index)}>delete</button>
+    <div className="containerStat">
+      <b className="nameSt">~{path}~</b>
+      <div className="on-air" onClick={handleStart}>
+        ON AIR
+      </div>
+      <div className="list">
+        {uploads.map((upload, index) => {
+          if (index % 10 === 0) {
+            // Render a new list container after every 10th item
+            return (
+              <div key={index} className="upload-list">
+                <div className="list-inside">
+                  <div className="list-item">{upload}</div>
+                  <IconButton
+                    className="ico-del"
+                    onClick={() => handleDeleteSong(index)}
+                    aria-label="delete"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </div>
+              </div>
+            );
+          } else {
+            // Render the upload item as usual for non-10th items
+            return (
+              <div key={index} className="list-inside">
+                <div className="list-item">{upload}</div>
+                <IconButton
+                  className="ico-del"
+                  onClick={() => handleDeleteSong(index)}
+                  aria-label="delete"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </div>
+            );
+          }
+        })}
+      </div>
+      <div className="buttons_admin">
+        <div>
+          <Button
+            variant="contained"
+            component="label"
+            style={{ backgroundColor: "black" }}
+          >
+            Upload
+            <input
+              hidden
+              webkitdirectory="true"
+              accept="mp3"
+              multiple
+              type="file"
+              onChange={handleFileChange}
+            />
+          </Button>
+          <Button
+            variant="contained"
+            component="label"
+            style={{ backgroundColor: "black" }}
+            onClick={handleDeposit}
+          >
+            Deposit
+          </Button>
         </div>
-      ))}
-      <Link to={`/admin/${path}/sell`}>SELL</Link>
-      <Link to="96">96</Link>
+        <Button
+          variant="contained"
+          component="label"
+          style={{ backgroundColor: "black" }}
+          onClick={handleLogout}
+        >
+          Log Out
+        </Button>
+        <Button
+          variant="contained"
+          component="label"
+          style={{ backgroundColor: "red" }}
+          onClick={handleOpen}
+        >
+          Sell
+        </Button>
+        <Modal
+          className="modal"
+          open={open}
+          onClose={handleClose}
+          closeAfterTransition
+        >
+          <Box
+            className="modal-box"
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 300,
+              height: 250,
+              padding: 3,
+              borderRadius: 8,
+              backgroundColor: "black",
+              border: "2px solid #000",
+              color: "white",
+              boxShadow: 24,
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <Typography className="modal-t1" variant="h6" component="h2">
+              MAKE MONEY
+            </Typography>
+            <WhiteCssTextField
+              onChange={(e) => {
+                setPayPalEmail(e.target.value);
+              }}
+              style={{ margin: "10px" }}
+              InputLabelProps={{
+                style: { color: "#fff" },
+              }}
+              label="PayPal Email"
+              type="email"
+              value={paypalEmail}
+            ></WhiteCssTextField>
+            <WhiteCssTextField
+              onChange={(e) => {
+                e.preventDefault();
+                setPrice(e.target.value);
+              }}
+              style={{ margin: "10px", width: "90px", appearance: "none" }}
+              InputLabelProps={{
+                style: { color: "#fff", appearance: "none" },
+              }}
+              label="Price"
+              type="number"
+              InputProps={{
+                endAdornment: "$",
+              }}
+              value={price}
+            ></WhiteCssTextField>
+            <Button
+              onClick={handlePrice}
+              style={{ margin: "10px", height: "60px", width: "90px" }}
+              variant="outlined"
+            >
+              Save
+            </Button>
+            {isSaved && <Alert severity="success">Saved</Alert>}
+          </Box>
+        </Modal>
+      </div>
     </div>
   );
 }
