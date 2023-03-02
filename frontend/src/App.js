@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import Homepage from "./pages/Homepage";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
 import PrivateRoute from "./pages/Login/PrivateRoute";
 import Admin from "./pages/Administrator/Admin";
 import Login from "./pages/Login/Login";
@@ -12,8 +17,10 @@ import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 import AdminSELL from "./pages/Administrator/AdminSELL";
 export const socket = new io("http://localhost:8080");
+export let stations = [];
+let setStations = () => {};
 function App() {
-  let [stations, setStations] = useState([]);
+  [stations, setStations] = useState([]);
   useEffect(() => {
     handleRefresh();
   }, []);
@@ -30,16 +37,19 @@ function App() {
       <div className="container">
         <Router>
           <Switch>
-            {stations.map((path) => (
+            {stations.map((path, index) => (
               <Route
                 path={`/${path.station}`}
                 component={Homepage}
-                key={path.station}
+                key={index}
               />
             ))}
             <Route path="/login" component={Login} />
             <Route path="/signup" component={SignUp} />
             <Route path="/market" key="key" component={MarketPlace} />
+            <Route exact path="/">
+              <Redirect to="/96" />
+            </Route>
             <PrivateRoute exact path="/admin" component={AdminMAIN} />
             {stations.map((path) => (
               <PrivateRoute
@@ -62,5 +72,4 @@ function App() {
     </div>
   );
 }
-
 export default App;

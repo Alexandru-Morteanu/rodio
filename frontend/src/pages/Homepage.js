@@ -1,13 +1,34 @@
 import React, { useEffect, useState } from "react";
 import "./Homepage.css";
-import { Link, useHistory, useLocation } from "react-router-dom";
-import { socket } from "../App";
+import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { socket, stations } from "../App";
+import { styled, useTheme } from "@mui/material/styles";
+import FastRewindRounded from "@mui/icons-material/FastRewindRounded";
+import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
+import FastForwardRounded from "@mui/icons-material/FastForwardRounded";
+import PauseRounded from "@mui/icons-material/PauseRounded";
 import Peer from "peerjs";
-import { Tooltip } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { red } from "@mui/material/colors";
 export let localPeerId;
+const Widget = styled("div")(({ theme }) => ({
+  padding: 16,
+  borderRadius: 16,
+  width: 200,
+  maxWidth: "20%",
+  margin: "auto",
+  position: "relative",
+  zIndex: 1,
+  backgroundColor: red,
+  backdropFilter: "blur(40px)",
+}));
 function Homepage() {
+  const [paused, setPaused] = useState(false);
   const location = useLocation();
-  const path = location.pathname.split("/");
+  const [path, setPath] = useState(location.pathname.split("/"));
+  const [index, setIndex] = useState(
+    stations.findIndex((station) => station.station === path[1])
+  );
   let [localStream, setLocalStream] = useState();
   let [audioElement, setAudioElement] = useState(new Audio());
   let [k, setK] = useState(0);
@@ -16,6 +37,14 @@ function Homepage() {
   let [peer, setPeer] = useState(null);
   const audioContext = new AudioContext();
   let [stream, setStream] = useState(null);
+  let match = useRouteMatch("/96");
+  useEffect(() => {
+    if (!paused && audioElement.srcObject) {
+      audioElement.play();
+    } else if (paused && audioElement.srcObject) {
+      audioElement.pause();
+    }
+  }, [paused]);
   useEffect(() => {
     let newpeer = new Peer();
     newpeer.on("open", (id) => {
@@ -29,6 +58,7 @@ function Homepage() {
       console.log(users);
     });
     setPeer(newpeer);
+    console.log(index);
   }, []);
   useEffect(() => {
     if (stream) {
@@ -95,23 +125,40 @@ function Homepage() {
     console.log(path[1]);
     return () => {};
   }, []);
-
-  const handleOn = () => {
-    if (k == 1) {
-      audioElement.pause();
-      setK(0);
-    } else {
-      console.log(audioElement.srcObject);
-      audioElement.play();
-      setK(1);
-    }
-  };
+  useEffect(() => {
+    //history.push(path[1])
+  }, [path]);
+  function prevPath() {
+    try {
+      if (index === 0) {
+        setIndex(stations.length - 1);
+      } else {
+        setIndex(index - 1);
+      }
+      console.log(index);
+    } catch {}
+  }
+  function nextPath() {
+    try {
+      if (index === stations.length - 1) {
+        setIndex(0);
+      } else {
+        setIndex(index + 1);
+      }
+      console.log(index);
+    } catch {}
+  }
+  useEffect(() => {
+    history.push(stations[index].station);
+  }, [index]);
   function handleGet() {
     history.push("/signup");
   }
   const items = Array.from({ length: 9 }, (_, index) => (
     <li key={index}>{"~96.6~"}</li>
   ));
+  const theme = useTheme();
+  const mainIconColor = theme.palette.mode === "dark" ? "#fff" : "#000";
   return (
     <div className="containerHome">
       <div className="left">
@@ -134,15 +181,47 @@ function Homepage() {
           <ul>{items}</ul>
         </div>
         <div className="buttons">
-          <div className="on" onClick={handleOn}>
-            <p>ON/OFF</p>
-          </div>
-          <div className="volume">
-            <p>Volume</p>
-          </div>
-          <div className="next">
-            <p>Next</p>
-          </div>
+          <Box sx={{ width: "100%", overflow: "hidden" }}>
+            <Widget>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mt: -1,
+                }}
+              >
+                <IconButton onClick={prevPath} aria-label="previous song">
+                  <FastRewindRounded
+                    fontSize="large"
+                    htmlColor={mainIconColor}
+                  />
+                </IconButton>
+                <IconButton
+                  aria-label={paused ? "play" : "pause"}
+                  onClick={() => setPaused(!paused)}
+                >
+                  {paused ? (
+                    <PlayArrowRounded
+                      sx={{ fontSize: "3rem" }}
+                      htmlColor={mainIconColor}
+                    />
+                  ) : (
+                    <PauseRounded
+                      sx={{ fontSize: "3rem" }}
+                      htmlColor={mainIconColor}
+                    />
+                  )}
+                </IconButton>
+                <IconButton onClick={nextPath} aria-label="next song">
+                  <FastForwardRounded
+                    fontSize="large"
+                    htmlColor={mainIconColor}
+                  />
+                </IconButton>
+              </Box>
+            </Widget>
+          </Box>
         </div>
       </div>
       <div className="right">
