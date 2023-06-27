@@ -34,7 +34,21 @@ io.on("connection", (socket) => {
     console.log(`Sent new message to room ${room}: ${message}`);
   });
 
+  socket.on("getLow", (low, room) => {
+    io.to(room).emit("low", low);
+  });
+  socket.on("getMid", (mid, room) => {
+    io.to(room).emit("mid", mid);
+  });
+  socket.on("getHigh", (high, room) => {
+    io.to(room).emit("high", high);
+  });
+  socket.on("getGain", (gain, room) => {
+    io.to(room).emit("gain", gain);
+  });
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
 });
+/*
+ */

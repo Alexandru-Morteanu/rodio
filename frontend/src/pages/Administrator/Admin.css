@@ -12,7 +12,10 @@
     margin: 10px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    align-self: flex-start;
+    gap: 10px;
+    max-height: 230px;
+    overflow: scroll;
 }
 .list-inside{
     display: flex;
@@ -28,6 +31,7 @@
     align-items: center;
     justify-content: center;
     width: 90%;
+    border-radius: 30px;
 }
   
 .on-air{

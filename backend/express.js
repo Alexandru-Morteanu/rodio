@@ -357,7 +357,6 @@ app.get("/upload", verifyJWT, async (req, res) => {
         );
         console.log("del");
       } else {
-        console.log(`${__dirname}/${file}`);
         fs.readFile(`${__dirname}/${file}`, (err, data) => {
           if (err) {
             return res.status(500).send(err);

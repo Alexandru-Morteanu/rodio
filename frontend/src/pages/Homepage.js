@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Homepage.css";
 import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
 import { socket, stations } from "../App";
@@ -30,19 +30,30 @@ function Homepage() {
     stations.findIndex((station) => station.station === path[1])
   );
   let [localStream, setLocalStream] = useState();
-  let [audioElement, setAudioElement] = useState(new Audio());
+  let [audioElement1] = useState(new Audio());
+  let [audioElement2] = useState(new Audio());
+  let [low, setLow] = useState(0);
+  let [mid, setMid] = useState(0);
+  let [high, setHigh] = useState(0);
+  let [gain, setGain] = useState(0);
   let [k, setK] = useState(0);
+  let [streamPrimit, setStreamPrimit] = useState(0);
   const history = useHistory();
   let [users, setUsers] = useState([]);
   let [peer, setPeer] = useState(null);
-  const audioContext = new AudioContext();
+  const audioContext = useRef(new AudioContext());
+  const sourceNode = useRef(null);
+  const lowNode = useRef(null);
+  const midNode = useRef(null);
+  const highNode = useRef(null);
+  const gainNode = useRef(null);
   let [stream, setStream] = useState(null);
   let match = useRouteMatch("/96");
   useEffect(() => {
-    if (!paused && audioElement.srcObject) {
-      audioElement.play();
-    } else if (paused && audioElement.srcObject) {
-      audioElement.pause();
+    if (!paused && audioElement1.srcObject) {
+      audioElement1.play();
+    } else if (paused && audioElement1.srcObject) {
+      audioElement1.pause();
     }
   }, [paused]);
   useEffect(() => {
@@ -57,17 +68,109 @@ function Homepage() {
       setUsers(id);
       console.log(users);
     });
+    socket.on("low", (low) => {
+      setLow(low);
+    });
+    socket.on("mid", (mid) => {
+      setMid(mid);
+    });
+    socket.on("high", (high) => {
+      setHigh(high);
+    });
+    socket.on("gain", (gain) => {
+      setGain(gain);
+    });
     setPeer(newpeer);
     console.log(index);
   }, []);
   useEffect(() => {
+    if (lowNode.current) {
+      lowNode.current.gain.value =
+        low < 0
+          ? 20 * Math.log10(low * -1) * -1
+          : low === 0
+          ? 0
+          : 20 * Math.log10(low);
+      console.log("low: " + low);
+    }
+  }, [low]);
+  useEffect(() => {
+    if (midNode.current) {
+      midNode.current.gain.value =
+        mid < 0
+          ? 20 * Math.log10(mid * -1) * -1
+          : mid === 0
+          ? 0
+          : 20 * Math.log10(mid);
+      console.log("mid: " + mid);
+    }
+  }, [mid]);
+  useEffect(() => {
+    if (highNode.current) {
+      const targetGain =
+        high < 0
+          ? 20 * Math.log10(high * -1) * -1
+          : high === 0
+          ? 0
+          : 20 * Math.log10(high);
+      const duration = 0.1;
+      const currentTime = audioContext.current.currentTime;
+
+      highNode.current.gain.cancelScheduledValues(currentTime);
+      highNode.current.gain.setValueAtTime(
+        highNode.current.gain.value,
+        currentTime
+      );
+      highNode.current.gain.exponentialRampToValueAtTime(
+        targetGain,
+        currentTime + duration
+      );
+
+      console.log("high: " + high);
+    }
+  }, [high]);
+  useEffect(() => {
+    if (highNode.current) {
+      sourceNode.current.connect(lowNode.current);
+      lowNode.current.connect(midNode.current);
+      midNode.current.connect(highNode.current);
+      highNode.current.connect(audioContext.current.destination);
+    }
+  }, [gain]);
+
+  useEffect(() => {
+    if (!lowNode.current && sourceNode.current) {
+      lowNode.current = audioContext.current.createBiquadFilter();
+      lowNode.current.type = "peaking";
+      lowNode.current.frequency.value = 100;
+      lowNode.current.Q.value = 0.5;
+
+      midNode.current = audioContext.current.createBiquadFilter();
+      midNode.current.type = "peaking";
+      midNode.current.frequency.value = 1000;
+      midNode.current.Q.value = 0.5;
+
+      highNode.current = audioContext.current.createBiquadFilter();
+      highNode.current.type = "peaking";
+      highNode.current.frequency.value = 10000;
+      highNode.current.Q.value = 0.5;
+
+      sourceNode.current.connect(lowNode.current);
+      lowNode.current.connect(midNode.current);
+      midNode.current.connect(highNode.current);
+      highNode.current.connect(audioContext.current.destination);
+    }
+  }, [sourceNode.current]);
+
+  useEffect(() => {
     if (stream) {
-      const sourceNode = audioContext.createMediaStreamSource(stream);
-      console.log(sourceNode);
-      const analyserNode = audioContext.createAnalyser();
+      sourceNode.current = audioContext.current.createMediaStreamSource(stream);
+      console.log(sourceNode.current);
+
+      const analyserNode = audioContext.current.createAnalyser();
       analyserNode.fftSize = 2048;
 
-      sourceNode.connect(analyserNode);
+      sourceNode.current.connect(analyserNode);
       const canvas = document.getElementById("visualizer");
       const canvasCtx = canvas.getContext("2d");
       function drawVisualizer() {
@@ -106,13 +209,21 @@ function Homepage() {
     if (peer) {
       peer.on("call", (call) => {
         call.answer(localStream);
-        console.log("HERE");
         call.on("stream", (stream) => {
           try {
-            audioElement.srcObject = stream;
-            setStream(stream);
-            console.log(audioElement.srcObject);
-            audioElement.play();
+            if (call.metadata === "stream1") {
+              console.log("stream1 modified");
+              audioElement1.srcObject = stream;
+              setStream(stream);
+              audioElement1.play();
+              streamPrimit = 1;
+            } else if (call.metadata === "stream2") {
+              console.log("stream2 modified");
+              audioElement2.srcObject = stream;
+              setStream(stream);
+              audioElement2.play();
+              streamPrimit = 0;
+            }
           } catch (e) {
             console.log(e);
           }
@@ -164,8 +275,7 @@ function Homepage() {
       <div className="left">
         <div className="label">
           <div className="logo">
-            <b>Horizon</b>
-            <b>Radio</b>
+            <b>SERPAS</b>
           </div>
           <div onClick={handleGet} className="getStart">
             <Link className="get" to="/signup">
