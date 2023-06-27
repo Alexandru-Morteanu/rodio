@@ -4,12 +4,11 @@ import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
 import { socket, stations } from "../App";
 import { styled, useTheme } from "@mui/material/styles";
 import FastRewindRounded from "@mui/icons-material/FastRewindRounded";
-import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
 import FastForwardRounded from "@mui/icons-material/FastForwardRounded";
-import PauseRounded from "@mui/icons-material/PauseRounded";
 import Peer from "peerjs";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { red } from "@mui/material/colors";
+import PauseBTN from "./PauseBTN";
 export let localPeerId;
 const Widget = styled("div")(({ theme }) => ({
   padding: 16,
@@ -32,23 +31,33 @@ function Homepage() {
   let [localStream, setLocalStream] = useState();
   let [audioElement1] = useState(new Audio());
   let [audioElement2] = useState(new Audio());
-  let [low, setLow] = useState(0);
-  let [mid, setMid] = useState(0);
-  let [high, setHigh] = useState(0);
-  let [gain, setGain] = useState(0);
+  let [low1, setLow1] = useState(0);
+  let [mid1, setMid1] = useState(0);
+  let [high1, setHigh1] = useState(0);
+  let [gain1, setGain1] = useState(0);
+  let [low2, setLow2] = useState(0);
+  let [mid2, setMid2] = useState(0);
+  let [high2, setHigh2] = useState(0);
+  let [gain2, setGain2] = useState(0);
+  let [vol1, setVol1] = useState(0.5);
+  let [vol2, setVol2] = useState(0.5);
   let [k, setK] = useState(0);
   let [streamPrimit, setStreamPrimit] = useState(0);
   const history = useHistory();
   let [users, setUsers] = useState([]);
   let [peer, setPeer] = useState(null);
   const audioContext = useRef(new AudioContext());
-  const sourceNode = useRef(null);
-  const lowNode = useRef(null);
-  const midNode = useRef(null);
-  const highNode = useRef(null);
+  const stream1Node = useRef(null);
+  const stream2Node = useRef(null);
+  const lowNode1 = useRef(null);
+  const midNode1 = useRef(null);
+  const highNode1 = useRef(null);
+  const lowNode2 = useRef(null);
+  const midNode2 = useRef(null);
+  const highNode2 = useRef(null);
   const gainNode = useRef(null);
-  let [stream, setStream] = useState(null);
-  let match = useRouteMatch("/96");
+  let [stream1, setStream1] = useState(null);
+  let [stream2, setStream2] = useState(null);
   useEffect(() => {
     if (!paused && audioElement1.srcObject) {
       audioElement1.play();
@@ -68,109 +77,138 @@ function Homepage() {
       setUsers(id);
       console.log(users);
     });
-    socket.on("low", (low) => {
-      setLow(low);
-    });
-    socket.on("mid", (mid) => {
-      setMid(mid);
-    });
-    socket.on("high", (high) => {
-      setHigh(high);
-    });
-    socket.on("gain", (gain) => {
-      setGain(gain);
+    const eventHandlers = {
+      low1: setLow1,
+      mid1: setMid1,
+      high1: setHigh1,
+      low2: setLow2,
+      mid2: setMid2,
+      high2: setHigh2,
+      gain: setGain1,
+      vol1: setVol1,
+      vol2: setVol2,
+    };
+
+    Object.entries(eventHandlers).forEach(([eventName, handler]) => {
+      socket.on(eventName, (data) => {
+        handler(data);
+      });
     });
     setPeer(newpeer);
     console.log(index);
   }, []);
-  useEffect(() => {
-    if (lowNode.current) {
-      lowNode.current.gain.value =
-        low < 0
-          ? 20 * Math.log10(low * -1) * -1
-          : low === 0
-          ? 0
-          : 20 * Math.log10(low);
-      console.log("low: " + low);
-    }
-  }, [low]);
-  useEffect(() => {
-    if (midNode.current) {
-      midNode.current.gain.value =
-        mid < 0
-          ? 20 * Math.log10(mid * -1) * -1
-          : mid === 0
-          ? 0
-          : 20 * Math.log10(mid);
-      console.log("mid: " + mid);
-    }
-  }, [mid]);
-  useEffect(() => {
-    if (highNode.current) {
-      const targetGain =
-        high < 0
-          ? 20 * Math.log10(high * -1) * -1
-          : high === 0
-          ? 0
-          : 20 * Math.log10(high);
-      const duration = 0.1;
-      const currentTime = audioContext.current.currentTime;
 
-      highNode.current.gain.cancelScheduledValues(currentTime);
-      highNode.current.gain.setValueAtTime(
-        highNode.current.gain.value,
-        currentTime
+  useEffect(() => {
+    audioElement1.volume = vol1;
+  }, [vol1]);
+
+  useEffect(() => {
+    audioElement2.volume = vol2;
+  }, [vol2]);
+
+  function updateNodeGain(node, value) {
+    if (node.current) {
+      node.current.gain.value =
+        value < 0
+          ? 20 * Math.log10(value * -1) * -1
+          : value === 0
+          ? 0
+          : 20 * Math.log10(value);
+    }
+  }
+
+  function useNodeEffect(node, value) {
+    useEffect(() => {
+      updateNodeGain(node, value);
+    }, [value]);
+  }
+
+  useNodeEffect(lowNode1, low1);
+  useNodeEffect(midNode1, mid1);
+  useNodeEffect(highNode1, high1);
+  useNodeEffect(lowNode2, low2);
+  useNodeEffect(midNode2, mid2);
+  useNodeEffect(highNode2, high2);
+
+  useEffect(() => {
+    if (highNode1.current) {
+      stream1Node.current.connect(lowNode1.current);
+      lowNode1.current.connect(midNode1.current);
+      midNode1.current.connect(highNode1.current);
+      highNode1.current.connect(audioContext.current.destination);
+    }
+  }, [gain1]);
+  function createBiquadFilter(audioContext, type, frequency, Q) {
+    const filterNode = audioContext.createBiquadFilter();
+    filterNode.type = type;
+    filterNode.frequency.value = frequency;
+    filterNode.Q.value = Q;
+    return filterNode;
+  }
+  useEffect(() => {
+    if (stream1Node.current) {
+      lowNode1.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        100,
+        0.5
       );
-      highNode.current.gain.exponentialRampToValueAtTime(
-        targetGain,
-        currentTime + duration
+      midNode1.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        1000,
+        0.5
+      );
+      highNode1.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        10000,
+        0.5
       );
 
-      console.log("high: " + high);
+      stream1Node.current.connect(lowNode1.current);
+      lowNode1.current.connect(midNode1.current);
+      midNode1.current.connect(highNode1.current);
+      highNode1.current.connect(audioContext.current.destination);
     }
-  }, [high]);
+  }, [stream1Node.current]);
   useEffect(() => {
-    if (highNode.current) {
-      sourceNode.current.connect(lowNode.current);
-      lowNode.current.connect(midNode.current);
-      midNode.current.connect(highNode.current);
-      highNode.current.connect(audioContext.current.destination);
+    if (stream2Node.current) {
+      lowNode2.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        100,
+        0.5
+      );
+      midNode2.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        1000,
+        0.5
+      );
+      highNode2.current = createBiquadFilter(
+        audioContext.current,
+        "peaking",
+        10000,
+        0.5
+      );
+
+      stream2Node.current.connect(lowNode2.current);
+      lowNode2.current.connect(midNode2.current);
+      midNode2.current.connect(highNode2.current);
+      highNode2.current.connect(audioContext.current.destination);
     }
-  }, [gain]);
-
+  }, [stream2Node.current]);
   useEffect(() => {
-    if (!lowNode.current && sourceNode.current) {
-      lowNode.current = audioContext.current.createBiquadFilter();
-      lowNode.current.type = "peaking";
-      lowNode.current.frequency.value = 100;
-      lowNode.current.Q.value = 0.5;
-
-      midNode.current = audioContext.current.createBiquadFilter();
-      midNode.current.type = "peaking";
-      midNode.current.frequency.value = 1000;
-      midNode.current.Q.value = 0.5;
-
-      highNode.current = audioContext.current.createBiquadFilter();
-      highNode.current.type = "peaking";
-      highNode.current.frequency.value = 10000;
-      highNode.current.Q.value = 0.5;
-
-      sourceNode.current.connect(lowNode.current);
-      lowNode.current.connect(midNode.current);
-      midNode.current.connect(highNode.current);
-      highNode.current.connect(audioContext.current.destination);
-    }
-  }, [sourceNode.current]);
-
-  useEffect(() => {
-    if (stream) {
-      sourceNode.current = audioContext.current.createMediaStreamSource(stream);
-      console.log(sourceNode.current);
+    if (stream1) {
+      stream1Node.current =
+        audioContext.current.createMediaStreamSource(stream1);
+      console.log(stream1Node.current);
 
       const analyserNode = audioContext.current.createAnalyser();
       analyserNode.fftSize = 2048;
 
-      sourceNode.current.connect(analyserNode);
+      stream1Node.current.connect(analyserNode);
       const canvas = document.getElementById("visualizer");
       const canvasCtx = canvas.getContext("2d");
       function drawVisualizer() {
@@ -203,7 +241,13 @@ function Homepage() {
 
       drawVisualizer();
     }
-  }, [stream]);
+  }, [stream1]);
+  useEffect(() => {
+    if (stream2) {
+      stream2Node.current =
+        audioContext.current.createMediaStreamSource(stream2);
+    }
+  }, [stream2]);
   useEffect(() => {
     console.log("--------");
     if (peer) {
@@ -214,13 +258,13 @@ function Homepage() {
             if (call.metadata === "stream1") {
               console.log("stream1 modified");
               audioElement1.srcObject = stream;
-              setStream(stream);
+              setStream1(stream);
               audioElement1.play();
               streamPrimit = 1;
             } else if (call.metadata === "stream2") {
               console.log("stream2 modified");
               audioElement2.srcObject = stream;
-              setStream(stream);
+              setStream2(stream);
               audioElement2.play();
               streamPrimit = 0;
             }
@@ -268,8 +312,6 @@ function Homepage() {
   const items = Array.from({ length: 9 }, (_, index) => (
     <li key={index}>{"~96.6~"}</li>
   ));
-  const theme = useTheme();
-  const mainIconColor = theme.palette.mode === "dark" ? "#fff" : "#000";
   return (
     <div className="containerHome">
       <div className="left">
@@ -302,32 +344,11 @@ function Homepage() {
                 }}
               >
                 <IconButton onClick={prevPath} aria-label="previous song">
-                  <FastRewindRounded
-                    fontSize="large"
-                    htmlColor={mainIconColor}
-                  />
+                  <FastRewindRounded fontSize="large" htmlColor={"#000"} />
                 </IconButton>
-                <IconButton
-                  aria-label={paused ? "play" : "pause"}
-                  onClick={() => setPaused(!paused)}
-                >
-                  {paused ? (
-                    <PlayArrowRounded
-                      sx={{ fontSize: "3rem" }}
-                      htmlColor={mainIconColor}
-                    />
-                  ) : (
-                    <PauseRounded
-                      sx={{ fontSize: "3rem" }}
-                      htmlColor={mainIconColor}
-                    />
-                  )}
-                </IconButton>
+                <PauseBTN paused={paused} setPaused={setPaused} />
                 <IconButton onClick={nextPath} aria-label="next song">
-                  <FastForwardRounded
-                    fontSize="large"
-                    htmlColor={mainIconColor}
-                  />
+                  <FastForwardRounded fontSize="large" htmlColor={"#000"} />
                 </IconButton>
               </Box>
             </Widget>

@@ -34,17 +34,22 @@ io.on("connection", (socket) => {
     console.log(`Sent new message to room ${room}: ${message}`);
   });
 
-  socket.on("getLow", (low, room) => {
-    io.to(room).emit("low", low);
-  });
-  socket.on("getMid", (mid, room) => {
-    io.to(room).emit("mid", mid);
-  });
-  socket.on("getHigh", (high, room) => {
-    io.to(room).emit("high", high);
-  });
-  socket.on("getGain", (gain, room) => {
-    io.to(room).emit("gain", gain);
+  const events = {
+    getLow1: "low1",
+    getMid1: "mid1",
+    getHigh1: "high1",
+    getLow2: "low2",
+    getMid2: "mid2",
+    getHigh2: "high2",
+    getGain: "gain",
+    getVol1: "vol1",
+    getVol2: "vol2",
+  };
+
+  Object.entries(events).forEach(([eventName, emitName]) => {
+    socket.on(eventName, (data, room) => {
+      io.to(room).emit(emitName, data);
+    });
   });
   socket.on("disconnect", () => {
     console.log("Client disconnected");

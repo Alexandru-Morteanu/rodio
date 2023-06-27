@@ -10,16 +10,24 @@ import { socket } from "../../App";
 import axiosInstance from "../Login/Axios";
 import "./Admin.css";
 import { createCssTextField } from "../MarketPlace/MarketPlace";
-import { Equalizer, Melody } from "../Test";
+import { Equalizer, Melody } from "../Equalizer";
+import PauseBTN, { SliderVol } from "../PauseBTN";
 const WhiteCssTextField = createCssTextField("white");
 function Admin() {
   let localPeerId;
   let [peer, setPeer] = useState(null);
   const [index1, setIndex1] = useState(null);
   const [index2, setIndex2] = useState(null);
+  const [paused1, setPaused1] = useState(false);
+  const [paused2, setPaused2] = useState(false);
+  const [vol1, setVol1] = useState(0.5);
+  const [vol2, setVol2] = useState(0.5);
   const [audioElement1] = useState(new Audio());
   const [audioElement2] = useState(new Audio());
-  let [localStream, setLocalStream] = useState();
+  const [open, setOpen] = useState(false);
+  const [price, setPrice] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
+  let [localStream] = useState();
   let [localStream1, setLocalStream1] = useState();
   let [localStream2, setLocalStream2] = useState();
   const [paypalEmail, setPayPalEmail] = useState("");
@@ -33,6 +41,18 @@ function Admin() {
   let history = useHistory();
   let path = locations.pathname.split("/");
   path = path[2];
+  useEffect(() => {
+    let newpeer = new Peer();
+    newpeer.on("open", (id) => {
+      localPeerId = id;
+      console.log(id);
+      socket.emit("joinRoom", path, localPeerId);
+    });
+
+    handleRefresh();
+    setPeer(newpeer);
+  }, []);
+
   useEffect(() => {
     if (localStream1) {
       console.log(localStream1);
@@ -71,17 +91,6 @@ function Admin() {
   useEffect(() => {
     console.log(audioElement1);
   }, [audioElement1]);
-  useEffect(() => {
-    let newpeer = new Peer();
-    newpeer.on("open", (id) => {
-      localPeerId = id;
-      console.log(id);
-      socket.emit("joinRoom", path, localPeerId);
-    });
-
-    handleRefresh();
-    setPeer(newpeer);
-  }, []);
 
   async function handleRefresh() {
     try {
@@ -102,20 +111,6 @@ function Admin() {
         console.log("not found");
         history.push("/96");
       }
-      // console.log(index);
-      // if (index === 0) {
-      //   const fileRes = await axiosInstance.get("/upload", {
-      //     params: {
-      //       station: path,
-      //       index: index,
-      //     },
-      //     responseType: "blob",
-      //   });
-      //   audioElement.src = URL.createObjectURL(fileRes.data);
-      //   audioElement.currentTime = 215;
-      //   audioElement.volume = 0.05;
-      //   setLocalStream(audioElement.captureStream());
-      // }
       const req = await axiosInstance.get("/uploads", {
         params: {
           station: path,
@@ -126,7 +121,6 @@ function Admin() {
       setUploads(req.data.names);
       console.log(req.data);
     } catch (error) {
-      //alert("wrong details");
       console.log(error);
     }
   }
@@ -196,6 +190,7 @@ function Admin() {
       console.log(e);
     }
   }
+
   const anchors = document.querySelector(".on-air");
   useEffect(() => {
     if (anchors) {
@@ -211,13 +206,33 @@ function Admin() {
       });
     }
   }, [anchors]);
-  const [open, setOpen] = useState(false);
-  const [price, setPrice] = useState("");
+
+  useEffect(() => {
+    if (!paused1 && !k) {
+      audioElement1.play();
+    } else {
+      audioElement1.pause();
+    }
+  }, [paused1]);
+
+  useEffect(() => {
+    if (!paused2 && !k) {
+      audioElement2.play();
+    } else {
+      audioElement2.pause();
+    }
+  }, [paused2]);
+
+  useEffect(() => {
+    socket.emit("getVol1", vol1, path);
+  }, [vol1]);
+
+  useEffect(() => {
+    socket.emit("getVol2", vol2, path);
+  }, [vol2]);
+
   const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-  };
-  const [isSaved, setIsSaved] = useState(false);
+  const handleClose = () => setOpen(false);
   async function handlePrice() {
     try {
       if (paypalEmail && price) {
@@ -300,7 +315,16 @@ function Admin() {
       <div className="on-air" onClick={handleStart}>
         ON AIR
       </div>
-      <Equalizer room={path} audioElement1={audioElement1} />
+      <div style={{ display: "flex" }}>
+        <Equalizer room={path} nr={1} />
+        <Equalizer room={path} nr={2} />
+      </div>
+      <div>
+        <PauseBTN paused={paused1} setPaused={setPaused1} />
+        <SliderVol vol={vol1} setVol={setVol1} />
+        <SliderVol vol={vol2} setVol={setVol2} />
+        <PauseBTN paused={paused2} setPaused={setPaused2} />
+      </div>
       <DndProvider backend={HTML5Backend}>
         <div
           className="areas"
