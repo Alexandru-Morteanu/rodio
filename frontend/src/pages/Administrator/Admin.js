@@ -10,8 +10,9 @@ import { socket } from "../../App";
 import axiosInstance from "../Login/Axios";
 import "./Admin.css";
 import { createCssTextField } from "../MarketPlace/MarketPlace";
-import { Equalizer, Melody } from "../Equalizer";
-import PauseBTN, { SliderVol } from "../PauseBTN";
+import { Equalizer, Melody } from "../LessCode/Equalizer";
+import PauseBTN, { SliderVol } from "../LessCode/PauseBTN";
+import ClickButton from "../LessCode/ClickButton";
 const WhiteCssTextField = createCssTextField("white");
 function Admin() {
   let localPeerId;
@@ -24,9 +25,12 @@ function Admin() {
   const [vol2, setVol2] = useState(0.5);
   const [audioElement1] = useState(new Audio());
   const [audioElement2] = useState(new Audio());
+  const [music, setMusic] = useState("rgb(255,185,0)");
+  const [control, setControl] = useState("none");
   const [open, setOpen] = useState(false);
   const [price, setPrice] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const hiddenFileInput = useRef(null);
   let [localStream] = useState();
   let [localStream1, setLocalStream1] = useState();
   let [localStream2, setLocalStream2] = useState();
@@ -106,7 +110,6 @@ function Admin() {
         return string.includes(path);
       });
       if (searchResults[0]) {
-        console.log("exist");
       } else {
         console.log("not found");
         history.push("/96");
@@ -117,15 +120,16 @@ function Admin() {
         },
       });
       indexLength = req.data.indexLength;
-      console.log(indexLength);
       setUploads(req.data.names);
-      console.log(req.data);
     } catch (error) {
       console.log(error);
     }
   }
-  let handleFileChange = (event) => {
+
+  let handleFileChange = async (event) => {
     setFiles(event.target.files);
+    handleDeposit(event.target.files);
+    event.target.value = "";
   };
 
   const handleStart = () => {
@@ -146,7 +150,7 @@ function Admin() {
     }
   };
 
-  async function handleDeposit() {
+  async function handleDeposit(files) {
     const formData = new FormData();
 
     for (let i = 0; i < files.length; i++) {
@@ -177,15 +181,6 @@ function Admin() {
       });
       handleRefresh();
       console.log(index);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      localStorage.removeItem("token");
-      console.log("logout");
     } catch (e) {
       console.log(e);
     }
@@ -233,6 +228,21 @@ function Admin() {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  function handleControl() {
+    console.log(control);
+    console.log(music);
+    setControl("rgb(255,185,0)");
+    setMusic("none");
+  }
+
+  function handleMusic() {
+    console.log(control);
+    console.log(music);
+    setControl("none");
+    setMusic("rgb(255,185,0)");
+  }
+
   async function handlePrice() {
     try {
       if (paypalEmail && price) {
@@ -251,10 +261,15 @@ function Admin() {
     } catch {}
   }
 
+  function handleAdd() {
+    hiddenFileInput.current.click();
+  }
+
   const DropArea = ({ area }) => {
     const [{ canDrop, isOver, item }, drop] = useDrop({
       accept: "rectangle",
       drop: async (item) => {
+        console.log(item.id);
         const fileRes = await axiosInstance.get("/upload", {
           params: {
             station: path,
@@ -265,10 +280,10 @@ function Admin() {
         if (area === 1) {
           audioElement1.src = URL.createObjectURL(fileRes.data);
           //audioElement1.currentTime = 50;
-          audioElement1.volume = 0.1;
+          audioElement1.volume = 0.000001;
           console.log(k);
           localStream = audioElement1.captureStream();
-          setIndex1(item.index);
+          setIndex1(item.id);
           setLocalStream1(localStream);
 
           if (k === 0) {
@@ -279,9 +294,9 @@ function Admin() {
         } else if (area === 2) {
           audioElement2.src = URL.createObjectURL(fileRes.data);
           //audioElement2.currentTime = 50;
-          audioElement2.volume = 0.00001;
+          audioElement2.volume = 0.000001;
           localStream = audioElement2.captureStream();
-          setIndex2(item.index);
+          setIndex2(item.id);
           setLocalStream2(localStream);
           if (k === 0) audioElement2.play();
           console.log("Stream 2");
@@ -300,9 +315,14 @@ function Admin() {
       <div
         ref={drop}
         style={{
-          width: 100,
-          height: 100,
-          background: "red",
+          width: 160,
+          height: 160,
+          background: "black",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
         }}
       >
         {area === 1 ? index1 : area === 2 ? index2 : null}
@@ -315,7 +335,7 @@ function Admin() {
       <div className="on-air" onClick={handleStart}>
         ON AIR
       </div>
-      <div style={{ display: "flex" }}>
+      {/* <div style={{ display: "flex" }}>
         <Equalizer room={path} nr={1} />
         <Equalizer room={path} nr={2} />
       </div>
@@ -324,7 +344,7 @@ function Admin() {
         <SliderVol vol={vol1} setVol={setVol1} />
         <SliderVol vol={vol2} setVol={setVol2} />
         <PauseBTN paused={paused2} setPaused={setPaused2} />
-      </div>
+      </div> */}
       <DndProvider backend={HTML5Backend}>
         <div
           className="areas"
@@ -335,66 +355,85 @@ function Admin() {
           }}
         >
           <DropArea area={1} className="area1" />
-          <div className="list">
-            {uploads.map((upload, index) => {
-              return (
-                <div key={index} className="list-inside">
-                  <Melody
+          <div
+            style={{
+              height: "90%",
+              width: 200,
+            }}
+          >
+            <ClickButton
+              control={control}
+              music={music}
+              handleControl={handleControl}
+              handleMusic={handleMusic}
+            />
+            {music !== "none" ? (
+              <div className="list">
+                {uploads.map((upload, index) => {
+                  return (
+                    <div key={index} className="list-inside">
+                      <Melody
+                        style={{
+                          width: 100,
+                        }}
+                        id={upload}
+                        index={index}
+                        className="list-item"
+                      />
+                      <IconButton
+                        className="ico-del"
+                        onClick={() => handleDeleteSong(index)}
+                        aria-label="delete"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </div>
+                  );
+                })}
+                <div>
+                  <div
                     style={{
-                      width: 100,
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      fontSize: 20,
                     }}
-                    id={upload}
-                    index={index}
-                    className="list-item"
-                  ></Melody>
-                  <IconButton
-                    className="ico-del"
-                    onClick={() => handleDeleteSong(index)}
-                    aria-label="delete"
+                    onClick={handleAdd}
                   >
-                    <DeleteIcon />
-                  </IconButton>
+                    ⊕Add more
+                  </div>
+                  <input
+                    hidden
+                    ref={hiddenFileInput}
+                    webkitdirectory="true"
+                    accept="mp3"
+                    multiple
+                    type="file"
+                    onChange={handleFileChange}
+                  />
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "90%",
+                }}
+              >
+                <PauseBTN paused={paused1} setPaused={setPaused1} />
+                <SliderVol vol={vol1} setVol={setVol1} />
+                <SliderVol vol={vol2} setVol={setVol2} />
+                <PauseBTN paused={paused2} setPaused={setPaused2} />
+              </div>
+            )}
           </div>
           <DropArea area={2} className="area2" />
         </div>
       </DndProvider>
       <div className="buttons_admin">
-        <div>
-          <Button
-            variant="contained"
-            component="label"
-            style={{ backgroundColor: "black" }}
-          >
-            Upload
-            <input
-              hidden
-              webkitdirectory="true"
-              accept="mp3"
-              multiple
-              type="file"
-              onChange={handleFileChange}
-            />
-          </Button>
-          <Button
-            variant="contained"
-            component="label"
-            style={{ backgroundColor: "black" }}
-            onClick={handleDeposit}
-          >
-            Deposit
-          </Button>
-        </div>
-        <Button
-          variant="contained"
-          component="label"
-          style={{ backgroundColor: "black" }}
-          onClick={handleLogout}
-        >
-          Log Out
-        </Button>
+        <Equalizer room={path} nr={1} />
         <Button
           variant="contained"
           component="label"
@@ -403,6 +442,7 @@ function Admin() {
         >
           Sell
         </Button>
+        <Equalizer room={path} nr={2} />
         <Modal
           className="modal"
           open={open}

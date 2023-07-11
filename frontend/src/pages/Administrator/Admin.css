@@ -14,7 +14,7 @@
     flex-direction: column;
     align-self: flex-start;
     gap: 10px;
-    max-height: 230px;
+    max-height: 180px;
     overflow: scroll;
 }
 .list-inside{
@@ -75,11 +75,12 @@
     color: red;
 }
 .buttons_admin{
-    position: absolute;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap:10px;
-    margin-top: 55%;
+    gap:30px;
+    height: 30%;
+}
+.adminSwitch :hover{
+    background-color: red;
 }

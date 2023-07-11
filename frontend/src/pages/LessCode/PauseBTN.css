@@ -1,0 +1,18 @@
+input[type="range"] {
+    -webkit-appearance: none;
+  }
+  .slider::-webkit-slider-thumb,.slidereq::-webkit-slider-thumb {
+    appearance: none;
+    width: 15px;
+    height: 20px;
+    background: rgb(202, 152, 25);
+    border: solid;
+    border-color: rgb(255,185,0);
+    border-width: 2px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .slidereq::-webkit-slider-thumb {
+    width: 20px;
+    height: 30px;
+  }

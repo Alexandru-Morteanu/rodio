@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag } from "react-dnd";
-import { socket } from "../App";
+import { socket } from "../../App";
 
 export const Melody = ({ id, index }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -10,7 +10,6 @@ export const Melody = ({ id, index }) => {
       isDragging: monitor.isDragging(),
     }),
   });
-
   return (
     <div
       ref={drag}
@@ -18,6 +17,7 @@ export const Melody = ({ id, index }) => {
         borderRadius: 30,
         padding: 3,
         width: 130,
+        cursor: "pointer",
       }}
     >
       {id}
@@ -29,16 +29,13 @@ export const Equalizer = ({ room, nr }) => {
   const [lowFreq, setLowFreq] = useState(0);
   const [midFreq, setMidFreq] = useState(0);
   const [highFreq, setHighFreq] = useState(0);
-  const [gain, setGain] = useState(-3);
 
   useEffect(() => {
     socket.emit("getLow" + nr, lowFreq);
     socket.emit("getMid" + nr, midFreq);
     socket.emit("getHigh" + nr, highFreq);
-    socket.emit("getGain" + nr, gain);
   }, []);
   const handleLowFreqChange = (event) => {
-    console.log(parseFloat(event.target.value));
     socket.emit("getLow" + nr, parseFloat(event.target.value), room);
     setLowFreq(parseInt(event.target.value));
   };
@@ -53,54 +50,75 @@ export const Equalizer = ({ room, nr }) => {
     setHighFreq(parseInt(event.target.value));
   };
 
-  const handleGainChange = (event) => {
-    socket.emit("getGain" + nr, parseInt(event.target.value), room);
-    setGain(parseInt(event.target.value));
-  };
-
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+      }}
+    >
       {[
         {
-          label: "Low Frequency",
+          label: "LOW",
           value: lowFreq,
           onChange: handleLowFreqChange,
         },
         {
-          label: "Mid Frequency",
+          label: "MID",
           value: midFreq,
           onChange: handleMidFreqChange,
         },
         {
-          label: "High Frequency",
+          label: "HIGH",
           value: highFreq,
           onChange: handleHighFreqChange,
         },
       ].map((inputProps, index) => (
-        <div>
-          <label>{inputProps.label}</label>
-          <input
-            key={index}
-            type="range"
-            min="-15"
-            max="15"
-            step="0.1"
-            value={inputProps.value}
-            onChange={inputProps.onChange}
-          />
+        <div key={index}>
+          <div
+            style={{
+              width: 70,
+              height: 30,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "250%",
+                height: "100%",
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%) rotate(270deg)",
+              }}
+            >
+              <input
+                className="slidereq"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "rgb(50,50,50)",
+                }}
+                key={index}
+                type="range"
+                min="-15"
+                max="15"
+                step="0.1"
+                value={inputProps.value}
+                onChange={inputProps.onChange}
+              />
+            </div>
+          </div>
+          <label
+            style={{
+              position: "absolute",
+              transform: "translate(-50%, 400%)",
+              color: "rgb(180,180,180)",
+            }}
+          >
+            {inputProps.label}
+          </label>
         </div>
       ))}
-
-      <div>
-        <label>Gain</label>
-        <input
-          type="range"
-          min="-30"
-          max="8"
-          value={gain}
-          onChange={handleGainChange}
-        />
-      </div>
     </div>
   );
 };

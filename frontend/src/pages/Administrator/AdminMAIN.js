@@ -12,8 +12,21 @@ function AdminMAIN() {
   }, []);
   async function handleRefresh() {
     try {
-      const res = await axiosInstance.get("/admin");
-      setStations(res.data);
+      if (localStorage.getItem("token")) {
+        const res = await axiosInstance.get("/admin");
+        setStations(res.data);
+      } else {
+        history.push("/");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  async function handleLogout() {
+    try {
+      localStorage.removeItem("token");
+      console.log("logout");
+      handleRefresh();
     } catch (e) {
       console.log(e);
     }
@@ -53,6 +66,14 @@ function AdminMAIN() {
         }}
       >
         Get More
+      </Button>
+      <Button
+        variant="contained"
+        component="label"
+        style={{ backgroundColor: "black" }}
+        onClick={handleLogout}
+      >
+        Log Out
       </Button>
     </div>
   );

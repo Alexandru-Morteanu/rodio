@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -72,7 +73,7 @@ const sendPayment = (recipientEmail, amount, currency) => {
 };
 async function connectToMongoDB() {
   try {
-    await mongoose.connect("mongodb://localhost:27017/rodio", {
+    await mongoose.connect(process.env.MONGO_STRING, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
