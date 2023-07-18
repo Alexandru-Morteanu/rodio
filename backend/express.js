@@ -11,6 +11,7 @@ const userCollection = require("./modules_mongo/user");
 const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
+const appRouter = express.Router();
 
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
@@ -32,9 +33,6 @@ const upload = multer({ storage });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use("/api", (req, res, next) => {
-  next();
-});
 
 require("./stripe.js")(app);
 
@@ -91,7 +89,7 @@ async function connectToMongoDB() {
 }
 connectToMongoDB();
 //--------------------------------------------------------------------------------
-app.post("/sold", async (req, res) => {
+appRouter.post("/sold", async (req, res) => {
   const { station, token } = req.body;
   try {
     const decoded = jwt.verify(token, "secret");
@@ -117,7 +115,7 @@ app.post("/sold", async (req, res) => {
     res.json("GO");
   } catch {}
 });
-app.post("/sell", async (req, res) => {
+appRouter.post("/sell", async (req, res) => {
   const { path, paypalEmail, price } = req.body;
   try {
     const findStation = await stationCollection.findOne({ station: path });
@@ -138,7 +136,7 @@ app.post("/sell", async (req, res) => {
   //   .then((payout) => console.log(payout))
   //   .catch((error) => console.error(error));
 });
-app.post("/deletesong", async (req, res) => {
+appRouter.post("/deletesong", async (req, res) => {
   let { station, index } = req.body;
   try {
     const findStation = await stationCollection.findOne({ station: station });
@@ -165,7 +163,7 @@ app.post("/deletesong", async (req, res) => {
   }
 });
 
-app.post("/upload", upload.any("audio"), async (req, res) => {
+appRouter.post("/upload", upload.any("audio"), async (req, res) => {
   let data = req.files.map((file) => ({
     name: file.originalname,
     path: file.path,
@@ -183,7 +181,7 @@ app.post("/upload", upload.any("audio"), async (req, res) => {
     res.status(400).json("upload failed");
   }
 });
-app.post("/login", async (req, res) => {
+appRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const payload = { email: email };
   try {
@@ -208,7 +206,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/signup", async (req, res, next) => {
+appRouter.post("/signup", async (req, res, next) => {
   const { email, password } = req.body;
   const payload = { email: email };
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -237,7 +235,7 @@ app.post("/signup", async (req, res, next) => {
   }
 });
 
-app.post("/market/add", async (req, res, next) => {
+appRouter.post("/market/add", async (req, res, next) => {
   const { stationName } = req.body;
   console.log(stationName);
 
@@ -270,7 +268,7 @@ app.post("/market/add", async (req, res, next) => {
   }
 });
 
-app.post("/market/status", async (req, res, next) => {
+appRouter.post("/market/status", async (req, res, next) => {
   const { station, token } = req.body;
   try {
     const decoded = jwt.verify(token, "secret");
@@ -313,7 +311,7 @@ app.post("/market/status", async (req, res, next) => {
     res.status(400);
   }
 });
-app.post("/visitors", async (req, res) => {
+appRouter.post("/visitors", async (req, res) => {
   const { station } = req.body;
   try {
     console.log(station);
@@ -347,7 +345,7 @@ const verifyJWT = (req, res, next) => {
   }
 };
 //--------------------------------------------------------------------------------
-app.get("/visitors", verifyJWT, async (req, res) => {
+appRouter.get("/visitors", verifyJWT, async (req, res) => {
   const { station } = req.query;
   try {
     const findStation = await stationCollection.findOne({
@@ -358,7 +356,7 @@ app.get("/visitors", verifyJWT, async (req, res) => {
     res.status(400);
   }
 });
-app.get("/sell", verifyJWT, async (req, res) => {
+appRouter.get("/sell", verifyJWT, async (req, res) => {
   const { station } = req.query;
   try {
     const findStation = await stationCollection.findOne({
@@ -373,7 +371,7 @@ app.get("/sell", verifyJWT, async (req, res) => {
     res.status(400);
   }
 });
-app.get("/upload", verifyJWT, async (req, res) => {
+appRouter.get("/upload", verifyJWT, async (req, res) => {
   const { station, index } = req.query;
   console.log(station);
   try {
@@ -406,7 +404,7 @@ app.get("/upload", verifyJWT, async (req, res) => {
     //res.send(file);
   } catch {}
 });
-app.get("/uploads", async (req, res) => {
+appRouter.get("/uploads", async (req, res) => {
   const { station } = req.query;
   try {
     const findStation = await stationCollection.findOne({
@@ -435,7 +433,7 @@ app.get("/uploads", async (req, res) => {
     res.status(400).json("upload failed");
   }
 });
-app.get("/market/add", verifyJWT, async (req, res) => {
+appRouter.get("/market/add", verifyJWT, async (req, res) => {
   try {
     console.log(req.user);
     const stations = await stationCollection.find();
@@ -444,7 +442,7 @@ app.get("/market/add", verifyJWT, async (req, res) => {
     res.status(500).json("error");
   }
 });
-app.get("/", async (req, res) => {
+appRouter.get("/", async (req, res) => {
   try {
     const stations = await stationCollection.find();
     res.json(stations);
@@ -453,7 +451,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-app.get("/admin", verifyJWT, async (req, res) => {
+appRouter.get("/admin", verifyJWT, async (req, res) => {
   console.log(req.user);
   try {
     const findStation = await userCollection.findOne({
@@ -468,7 +466,7 @@ app.get("/admin", verifyJWT, async (req, res) => {
 const generateToken = (payload) => {
   return jwt.sign({ payload }, "secret", { expiresIn: "3d" });
 };
-
+app.use("/api", appRouter);
 app.listen(8000, () => {
   console.log("port connected");
 });
