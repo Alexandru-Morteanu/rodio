@@ -3,17 +3,15 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const cors = require("cors");
-const io = require("socket.io")(
-  (server,
-  {
-    cors: {
-      origin: "https://serpas.netlify.app/",
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Content-Type"],
-      credentials: true,
-    },
-  })
-);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "https://serpas.netlify.app/",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
+});
+
 app.use(cors());
 
 const port = 8080;
@@ -25,6 +23,7 @@ server.listen(port, () => {
 io.on("connection", (socket) => {
   console.log("New client connected");
   io.emit("open");
+
   socket.on("joinRoom", (room, localPeerId) => {
     socket.data.localPeerId = localPeerId;
     socket.join(room);
@@ -59,6 +58,7 @@ io.on("connection", (socket) => {
       io.to(room).emit(emitName, data);
     });
   });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
