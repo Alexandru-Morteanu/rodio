@@ -136,6 +136,7 @@ function Admin() {
 
   let handleFileChange = async (event) => {
     setFiles(event.target.files);
+    console.log(event.target.files.length);
     handleDeposit(event.target.files);
     event.target.value = "";
   };
@@ -160,10 +161,8 @@ function Admin() {
 
   async function handleDeposit(files) {
     const formData = new FormData();
-
     for (let i = 0; i < files.length; i++) {
       formData.append("audio", files[i]);
-      console.log(formData);
     }
     formData.append("station", path);
     try {

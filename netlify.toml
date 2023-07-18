@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "frontend/build"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:8000/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/socket.io/*"
+  to = "http://localhost:8080/socket.io/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "http://localhost:3000/:splat"
+  status = 200

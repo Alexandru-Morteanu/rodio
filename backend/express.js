@@ -10,6 +10,7 @@ const app = express();
 const userCollection = require("./modules_mongo/user");
 const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
+mongoose.set("strictQuery", false);
 
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
