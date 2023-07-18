@@ -10,7 +10,7 @@
 
 [[redirects]]
   from = "/socket.io/*"
-  to = "http://localhost:8080/socket.io/:splat"
+  to = "http://localhost:8080/:splat"
   status = 200
 
 [[redirects]]
