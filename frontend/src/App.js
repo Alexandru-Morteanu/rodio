@@ -17,13 +17,14 @@ import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 import AdminSELL from "./pages/Administrator/AdminSELL";
 import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
-export const socket = new io("http://localhost:8080");
+export const socket = new io("https://serpas1.onrender.com:8080");
 export let stations = [];
 let setStations = () => {};
 function App() {
   [stations, setStations] = useState([]);
   useEffect(() => {
     handleRefresh();
+    console.log(socket);
   }, []);
   async function handleRefresh() {
     try {
