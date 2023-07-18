@@ -1,7 +1,6 @@
 [build]
   base = "frontend"
   command = "npm run build"
-  environment = ["MONGO_STRING", "STRIPE_PUBLIC_KEY", "STRIPE_SECRET_KEY"]
   publish = "frontend/build"
 
 [[redirects]]
