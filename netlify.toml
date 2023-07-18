@@ -4,12 +4,12 @@
   publish = "build"
 
 [[redirects]]
-  from = "/api/*"
+  from = "/*"
   to = "http://localhost:8000/:splat"
   status = 200
 
 [[redirects]]
-  from = "/socket.io/*"
+  from = "/*"
   to = "http://localhost:8080/:splat"
   status = 200
 

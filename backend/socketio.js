@@ -3,9 +3,17 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const cors = require("cors");
-const io = require("socket.io")(server, {
-  cors: { origin: "*" },
-});
+const io = require("socket.io")(
+  (server,
+  {
+    cors: {
+      origin: "https://serpas.netlify.app/",
+      methods: ["GET", "POST"],
+      allowedHeaders: ["Content-Type"],
+      credentials: true,
+    },
+  })
+);
 app.use(cors());
 
 const port = 8080;
