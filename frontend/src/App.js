@@ -17,7 +17,14 @@ import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 import AdminSELL from "./pages/Administrator/AdminSELL";
 import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
-export const socket = new io("https://serpas1.onrender.com/");
+export const socket = new io("https://serpas1.onrender.com/", {
+  withCredentials: true,
+  extraHeaders: {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST",
+    "Access-Control-Allow-Headers": "Content-Type",
+  },
+});
 export let stations = [];
 let setStations = () => {};
 function App() {

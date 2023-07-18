@@ -13,8 +13,8 @@ const server = https.createServer(
   },
   app
 );
-console.log(server);
-const io = require("socket.io")(server);
+
+const io = require("socket.io")(server, { origin: "*" });
 
 app.use(cors());
 app.use((req, res, next) => {
