@@ -4,8 +4,8 @@
   "description": "",
   "main": "express.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "nodemon socketio.js",
+    "dev": "nodemon express.js",
     "build": "npm i"
   },
   "author": "",
