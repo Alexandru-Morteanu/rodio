@@ -24,8 +24,8 @@ app.use((req, res, next) => {
   next();
 });
 
-server.listen(() => {
-  console.log(`Server running on port 8080`);
+server.listen(443, () => {
+  console.log(`Server running on port 443`);
 });
 
 io.on("connection", (socket) => {
