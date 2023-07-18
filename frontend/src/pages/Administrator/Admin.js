@@ -13,6 +13,7 @@ import { createCssTextField } from "../MarketPlace/MarketPlace";
 import { Equalizer, Melody } from "../LessCode/Equalizer";
 import PauseBTN, { SliderVol } from "../LessCode/PauseBTN";
 import ClickButton from "../LessCode/ClickButton";
+import Visitors from "../LessCode/Visitors";
 const WhiteCssTextField = createCssTextField("white");
 function Admin() {
   let localPeerId;
@@ -29,6 +30,7 @@ function Admin() {
   const [control, setControl] = useState("none");
   const [open, setOpen] = useState(false);
   const [price, setPrice] = useState("");
+  const [total, setTotal] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const hiddenFileInput = useRef(null);
   let [localStream] = useState();
@@ -103,6 +105,12 @@ function Admin() {
           station: path,
         },
       });
+      const re = await axiosInstance.get("/visitors", {
+        params: {
+          station: path,
+        },
+      });
+      setTotal(re.data);
       setPayPalEmail(r.data.paypalEmail);
       setPrice(r.data.price);
       const res = await axiosInstance.get("/admin");
@@ -230,15 +238,11 @@ function Admin() {
   const handleClose = () => setOpen(false);
 
   function handleControl() {
-    console.log(control);
-    console.log(music);
     setControl("rgb(255,185,0)");
     setMusic("none");
   }
 
   function handleMusic() {
-    console.log(control);
-    console.log(music);
     setControl("none");
     setMusic("rgb(255,185,0)");
   }
@@ -331,20 +335,11 @@ function Admin() {
   };
   return (
     <div className="containerStat">
+      <Visitors live={users.length} total={total} />
       <b className="nameSt">~{path}~</b>
       <div className="on-air" onClick={handleStart}>
         ON AIR
       </div>
-      {/* <div style={{ display: "flex" }}>
-        <Equalizer room={path} nr={1} />
-        <Equalizer room={path} nr={2} />
-      </div>
-      <div>
-        <PauseBTN paused={paused1} setPaused={setPaused1} />
-        <SliderVol vol={vol1} setVol={setVol1} />
-        <SliderVol vol={vol2} setVol={setVol2} />
-        <PauseBTN paused={paused2} setPaused={setPaused2} />
-      </div> */}
       <DndProvider backend={HTML5Backend}>
         <div
           className="areas"
@@ -507,6 +502,7 @@ function Admin() {
             >
               Save
             </Button>
+
             {isSaved && <Alert severity="success">Saved</Alert>}
           </Box>
         </Modal>

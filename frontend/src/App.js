@@ -16,6 +16,7 @@ import MarketPlace from "./pages/MarketPlace/MarketPlace";
 import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 import AdminSELL from "./pages/Administrator/AdminSELL";
+import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
 export const socket = new io("http://localhost:8080");
 export let stations = [];
 let setStations = () => {};
@@ -50,6 +51,7 @@ function App() {
             <Route exact path="/">
               <Redirect to="/96" />
             </Route>
+            <PrivateRoute exact path="/admin/stripe" component={StripeBegin} />
             <PrivateRoute exact path="/admin" component={AdminMAIN} />
             {stations.map((path) => (
               <PrivateRoute

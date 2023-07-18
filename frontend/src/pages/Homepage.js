@@ -3,12 +3,15 @@ import "./Homepage.css";
 import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
 import { socket, stations } from "../App";
 import { styled, useTheme } from "@mui/material/styles";
+import Cookies from "js-cookie";
+import { v4 as uuidv4 } from "uuid";
 import FastRewindRounded from "@mui/icons-material/FastRewindRounded";
 import FastForwardRounded from "@mui/icons-material/FastForwardRounded";
 import Peer from "peerjs";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { red } from "@mui/material/colors";
 import PauseBTN from "./LessCode/PauseBTN";
+import axiosInstance from "./Login/Axios";
 export let localPeerId;
 const Widget = styled("div")(({ theme }) => ({
   padding: 16,
@@ -57,8 +60,10 @@ function Homepage() {
   const highNode2 = useRef(null);
   const gainNode1 = useRef(audioContext.current.createGain());
   const gainNode2 = useRef(audioContext.current.createGain());
+  const isNewVisitor = !Cookies.get("visitorId");
   let [stream1, setStream1] = useState(null);
   let [stream2, setStream2] = useState(null);
+  let checked = useRef(0);
   useEffect(() => {
     if (!paused && audioElement1.current.srcObject) {
       audioElement1.current.play();
@@ -66,6 +71,20 @@ function Homepage() {
       audioElement1.current.pause();
     }
   }, [paused]);
+
+  async function check() {
+    if (isNewVisitor && checked.current === 0) {
+      checked.current = 1;
+      console.log("new");
+      const uniqueId = uuidv4();
+      Cookies.set("visitorId", uniqueId);
+      const res = await axiosInstance.post("/visitors", { station: path[1] });
+      console.log(res.data);
+    } else {
+      console.log("old");
+    }
+  }
+
   useEffect(() => {
     let newpeer = new Peer();
     newpeer.on("open", (id) => {
@@ -95,7 +114,7 @@ function Homepage() {
       });
     });
     setPeer(newpeer);
-    console.log(index);
+    check();
   }, []);
 
   useEffect(() => {
@@ -288,6 +307,7 @@ function Homepage() {
   }, [path]);
   function prevPath() {
     try {
+      Cookies.remove("visitorId");
       if (index === 0) {
         setIndex(stations.length - 1);
       } else {
@@ -298,6 +318,7 @@ function Homepage() {
   }
   function nextPath() {
     try {
+      Cookies.remove("visitorId");
       if (index === stations.length - 1) {
         setIndex(0);
       } else {

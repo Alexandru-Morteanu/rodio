@@ -32,6 +32,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+require("./stripe.js")(app);
+
 paypal.configure({
   mode: "sandbox", // sandbox or live
   client_id:
@@ -243,6 +245,7 @@ app.post("/market/add", async (req, res, next) => {
     album: {
       name: "",
     },
+    visitors: "0",
   };
   try {
     const checkStation = await stationCollection.findOne({
@@ -306,6 +309,23 @@ app.post("/market/status", async (req, res, next) => {
     res.status(400);
   }
 });
+app.post("/visitors", async (req, res) => {
+  const { station } = req.body;
+  try {
+    console.log(station);
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+
+    await stationCollection.updateOne(
+      { _id: findStation._id },
+      { $set: { visitors: parseInt(findStation.visitors) + 1 } }
+    );
+    res.status(200).json("perfect");
+  } catch {
+    res.status(400);
+  }
+});
 //--------------------------------------------------------------------------------
 const verifyJWT = (req, res, next) => {
   let token = req.headers.authorization;
@@ -323,6 +343,17 @@ const verifyJWT = (req, res, next) => {
   }
 };
 //--------------------------------------------------------------------------------
+app.get("/visitors", verifyJWT, async (req, res) => {
+  const { station } = req.query;
+  try {
+    const findStation = await stationCollection.findOne({
+      station: station,
+    });
+    res.json(findStation.visitors);
+  } catch {
+    res.status(400);
+  }
+});
 app.get("/sell", verifyJWT, async (req, res) => {
   const { station } = req.query;
   try {
@@ -409,7 +440,6 @@ app.get("/market/add", verifyJWT, async (req, res) => {
     res.status(500).json("error");
   }
 });
-
 app.get("/", async (req, res) => {
   try {
     const stations = await stationCollection.find();

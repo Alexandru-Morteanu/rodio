@@ -28,6 +28,9 @@ const stationSchema = new mongoose.Schema({
   price: {
     type: String,
   },
+  visitors: {
+    type: String,
+  },
 });
 
 const station = mongoose.model("station", stationSchema);

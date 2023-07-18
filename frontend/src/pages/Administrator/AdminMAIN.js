@@ -31,6 +31,14 @@ function AdminMAIN() {
       console.log(e);
     }
   }
+
+  function handleStripeBegin() {
+    try {
+      history.push("/admin/stripe");
+    } catch (e) {
+      console.log(e);
+    }
+  }
   function handleStation(station) {
     try {
       console.log(station);
@@ -66,6 +74,14 @@ function AdminMAIN() {
         }}
       >
         Get More
+      </Button>
+      <Button
+        variant="contained"
+        component="label"
+        style={{ backgroundColor: "black" }}
+        onClick={handleStripeBegin}
+      >
+        Get Paid
       </Button>
       <Button
         variant="contained"
