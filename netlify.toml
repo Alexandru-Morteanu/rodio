@@ -1,8 +1,8 @@
 [build]
-  base = "/opt/build/repo/frontend"
+  base = "frontend"
   command = "npm run build"
   environment = ["MONGO_STRING", "STRIPE_PUBLIC_KEY", "STRIPE_SECRET_KEY"]
-  publish = "/opt/build/repo/frontend/frontend/build"
+  publish = "frontend/build"
 
 [[redirects]]
   from = "/api/*"
