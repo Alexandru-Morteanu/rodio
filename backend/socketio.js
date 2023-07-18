@@ -1,16 +1,23 @@
 const express = require("express");
-const app = express();
-const http = require("http");
-const server = http.createServer(app);
 const cors = require("cors");
-const io = require("socket.io")(server, {
-  cors: {
-    origin: "https://serpas.netlify.app/",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
-    credentials: true,
+const app = express();
+const https = require("https");
+
+const certificateText = process.env.CERTIFICATE;
+const privateKeyText = process.env.PRIVATE_KEY;
+
+const certificate = Buffer.from(certificateText, "utf8");
+const privateKey = Buffer.from(privateKeyText, "utf8");
+
+const server = https.createServer(
+  {
+    key: privateKey,
+    cert: certificate,
   },
-});
+  app
+);
+console.log(server);
+const io = require("socket.io")(server);
 
 app.use(cors());
 
