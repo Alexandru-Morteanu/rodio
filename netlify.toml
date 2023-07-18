@@ -4,16 +4,16 @@
   publish = "build"
 
 [[redirects]]
-  from = "/*"
-  to = "http://localhost:8000/:splat"
+  from = "/api/*"
+  to = "https://serpas.onrender.com/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/socket.io/*"
+  to = "https://serpas1.onrender.com/socket.io/:splat"
   status = 200
 
 [[redirects]]
   from = "/*"
-  to = "http://localhost:8080/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "http://localhost:3000/:splat"
+  to = "https://serpas.cloud"
   status = 200

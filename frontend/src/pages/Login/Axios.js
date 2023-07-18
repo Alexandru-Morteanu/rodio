@@ -1,6 +1,6 @@
 import axios from "axios";
 const axiosInstance = axios.create({
-  baseURL: "https://serpas.onrender.com/",
+  baseURL: "https://serpas.onrender.com/api",
 });
 axiosInstance.interceptors.request.use(
   (config) => {
