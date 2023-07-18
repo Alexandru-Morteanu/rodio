@@ -14,20 +14,18 @@ const server = https.createServer(
   app
 );
 
-const io = require("socket.io")(server, { origin: "*" });
+const io = require("socket.io")(server, { origin: "https://serpas.cloud" });
 
 app.use(cors());
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "https://serpas.cloud");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 
-const port = 8080;
-
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+server.listen(() => {
+  console.log(`Server running on port 8080`);
 });
 
 io.on("connection", (socket) => {
