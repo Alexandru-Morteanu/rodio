@@ -6,13 +6,10 @@ const https = require("https");
 const certificateText = process.env.CERTIFICATE;
 const privateKeyText = process.env.PRIVATE_KEY;
 
-const certificate = Buffer.from(certificateText, "utf8");
-const privateKey = Buffer.from(privateKeyText, "utf8");
-
 const server = https.createServer(
   {
-    key: privateKey,
-    cert: certificate,
+    key: privateKeyText,
+    cert: certificateText,
   },
   app
 );
