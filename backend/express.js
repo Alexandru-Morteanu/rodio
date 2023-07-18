@@ -32,7 +32,9 @@ const upload = multer({ storage });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use("/api");
+app.use("/api", (req, res, next) => {
+  next();
+});
 
 require("./stripe.js")(app);
 
