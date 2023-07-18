@@ -56,7 +56,7 @@ li::before {
     align-items: center;
     height: 240px;
     width: 300px;
-    background-image: url("/Users/morteanualexandru/Desktop/rodio/frontend/public/ADD.png");
+    background-image: url("../../public/ADD.png");
     background-size: cover;
     border-radius: 30px; 
     box-shadow: inset 0 0 30px rgba(0, 0, 0, 5);
