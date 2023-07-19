@@ -37,7 +37,7 @@ function Admin() {
   let [localStream1, setLocalStream1] = useState();
   let [localStream2, setLocalStream2] = useState();
   const [paypalEmail, setPayPalEmail] = useState("");
-  let [files, setFiles] = useState();
+  let [files, setFiles] = useState(null);
   let [uploads, setUploads] = useState([]);
   let [users, setUsers] = useState([]);
   let [indexLength, setIndexLength] = useState(0);
@@ -122,23 +122,18 @@ function Admin() {
         console.log("not found");
         history.push("/96");
       }
-      const req = await axiosInstance.get("/uploads", {
-        params: {
-          station: path,
-        },
-      });
-      indexLength = req.data.indexLength;
-      setUploads(req.data.names);
     } catch (error) {
       console.log(error);
     }
   }
 
-  let handleFileChange = async (event) => {
+  let handleFileChange = (event) => {
     setFiles(event.target.files);
-    console.log(event.target.files.length);
-    handleDeposit(event.target.files);
-    event.target.value = "";
+    console.log(event.target.files);
+    const uploads = Object.values(event.target.files);
+    const uploadNames = uploads.map((file) => file.name);
+    console.log(uploadNames);
+    setUploads(uploadNames);
   };
 
   const handleStart = () => {
@@ -159,35 +154,9 @@ function Admin() {
     }
   };
 
-  async function handleDeposit(files) {
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append("audio", files[i]);
-    }
-    formData.append("station", path);
+  function handleDeleteSong(index) {
     try {
-      console.log(formData);
-      const res = await axiosInstance.post("/upload", formData);
-      //audioElement.play();
-      handleRefresh();
-      try {
-        audioElement1.play();
-      } catch (e) {
-        console.log(e);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async function handleDeleteSong(index) {
-    try {
-      const res = await axiosInstance.post("/deletesong", {
-        station: path,
-        index: index,
-      });
-      handleRefresh();
-      console.log(index);
+      setUploads((prevUploads) => prevUploads.filter((_, i) => i !== index));
     } catch (e) {
       console.log(e);
     }
@@ -268,23 +237,16 @@ function Admin() {
     hiddenFileInput.current.click();
   }
 
-  const DropArea = ({ area }) => {
+  const DropArea = ({ area, f }) => {
     const [{ canDrop, isOver, item }, drop] = useDrop({
       accept: "rectangle",
       drop: async (item) => {
         console.log(item.id);
-        const fileRes = await axiosInstance.get("/upload", {
-          params: {
-            station: path,
-            index: item.index,
-          },
-          responseType: "blob",
-        });
         if (area === 1) {
-          audioElement1.src = URL.createObjectURL(fileRes.data);
+          console.log(f);
+          audioElement1.src = URL.createObjectURL(f[item.index]);
           //audioElement1.currentTime = 50;
           audioElement1.volume = 0.000001;
-          console.log(k);
           localStream = audioElement1.captureStream();
           setIndex1(item.id);
           setLocalStream1(localStream);
@@ -295,7 +257,7 @@ function Admin() {
           console.log("Stream 1");
           console.log(localStream);
         } else if (area === 2) {
-          audioElement2.src = URL.createObjectURL(fileRes.data);
+          audioElement2.src = URL.createObjectURL(f[item.index]);
           //audioElement2.currentTime = 50;
           audioElement2.volume = 0.000001;
           localStream = audioElement2.captureStream();
@@ -348,7 +310,7 @@ function Admin() {
             height: 240,
           }}
         >
-          <DropArea area={1} className="area1" />
+          <DropArea area={1} f={files} className="area1" />
           <div
             style={{
               height: "90%",

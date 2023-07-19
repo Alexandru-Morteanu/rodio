@@ -1,8 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const multer = require("multer");
 const bcrypt = require("bcrypt");
 const paypal = require("paypal-rest-sdk");
 const jwt = require("jsonwebtoken");
@@ -12,23 +10,6 @@ const stationCollection = require("./modules_mongo/station");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 const appRouter = express.Router();
-
-const storage = multer.diskStorage({
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      file.originalname.split(".")[0] +
-        "-" +
-        (+new Date()).toString() +
-        "." +
-        file.originalname.split(".")[1]
-    );
-  },
-  destination: function (req, file, cb) {
-    cb(null, "./uploads");
-  },
-});
-const upload = multer({ storage });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -136,51 +117,7 @@ appRouter.post("/sell", async (req, res) => {
   //   .then((payout) => console.log(payout))
   //   .catch((error) => console.error(error));
 });
-appRouter.post("/deletesong", async (req, res) => {
-  let { station, index } = req.body;
-  try {
-    const findStation = await stationCollection.findOne({ station: station });
-    if (fs.existsSync(`${__dirname}/${findStation.album[index].path}`)) {
-      fs.unlink(`${__dirname}/${findStation.album[index].path}`, (err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log("succes");
-        }
-      });
-    }
-    await stationCollection.updateOne(
-      { station: station },
-      { $unset: { [`album.${index}`]: null } }
-    );
-    await stationCollection.updateOne(
-      { station: station },
-      { $pull: { album: null } }
-    );
-    res.send("ok");
-  } catch {
-    res.status(400).json("upload failed");
-  }
-});
 
-appRouter.post("/upload", upload.any("audio"), async (req, res) => {
-  let data = req.files.map((file) => ({
-    name: file.originalname,
-    path: file.path,
-  }));
-  const station = req.body.station;
-  console.log(station);
-  try {
-    await stationCollection.updateOne(
-      { station: station },
-      { $push: { album: { $each: data } } }
-    );
-    console.log("ok");
-    res.send("ok");
-  } catch {
-    res.status(400).json("upload failed");
-  }
-});
 appRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const payload = { email: email };
@@ -369,68 +306,6 @@ appRouter.get("/sell", verifyJWT, async (req, res) => {
     });
   } catch {
     res.status(400);
-  }
-});
-appRouter.get("/upload", verifyJWT, async (req, res) => {
-  const { station, index } = req.query;
-  console.log(station);
-  try {
-    const findStation = await stationCollection.findOne({
-      station: station,
-    });
-    if (findStation) {
-      const file = findStation.album[index].path;
-      if (!file) {
-        await stationCollection.updateOne(
-          { station: station },
-          { $unset: { [`album.${index}`]: null } }
-        );
-        await stationCollection.updateOne(
-          { station: station },
-          { $pull: { album: null } }
-        );
-        console.log("del");
-      } else {
-        fs.readFile(`${__dirname}/${file}`, (err, data) => {
-          if (err) {
-            return res.status(500).send(err);
-          }
-          res.setHeader("Content-Type", "audio/mpeg");
-          res.setHeader("Content-Length", data.length);
-          res.send(data);
-        });
-      }
-    }
-    //res.send(file);
-  } catch {}
-});
-appRouter.get("/uploads", async (req, res) => {
-  const { station } = req.query;
-  try {
-    const findStation = await stationCollection.findOne({
-      station: station,
-    });
-    const names = findStation.album.map((file) => file.name);
-    console.log(names);
-    res.send({ names: names, indexLength: findStation.album.length });
-
-    /*
-    paths.map((path) => {
-      fs.readFile(`${__dirname}/${path}`, (err, dat) => {
-        if (err) {
-          return res.status(500).send(err);
-        }
-        data.push(dat);
-        if (data.length === paths.length) {
-          res.setHeader("Content-Type", "audio/mpeg");
-          res.setHeader("Content-Length", data.length);
-          res.send(data);
-        }
-      });
-    });
-    */
-  } catch {
-    res.status(400).json("upload failed");
   }
 });
 appRouter.get("/market/add", verifyJWT, async (req, res) => {
