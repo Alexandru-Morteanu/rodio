@@ -78,7 +78,7 @@ function AdminMAIN() {
       <Button
         variant="contained"
         component="label"
-        style={{ backgroundColor: "black" }}
+        style={{ backgroundColor: "red" }}
         onClick={handleStripeBegin}
       >
         Get Paid

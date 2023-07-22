@@ -10,6 +10,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     reauired: true,
   },
+  stripe: {
+    type: String,
+    unique: true,
+  },
+  stripe_complete: {
+    type: Boolean,
+  },
   stations: [
     {
       type: String,

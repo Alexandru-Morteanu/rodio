@@ -150,6 +150,8 @@ appRouter.post("/signup", async (req, res, next) => {
   const data = {
     email: email,
     password: hashedPassword,
+    stripe: "",
+    stripe_complete: false,
   };
   try {
     console.log("---->" + email);

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Homepage.css";
+import AdSense from "react-adsense";
 import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
 import { socket, stations } from "../App";
 import { styled, useTheme } from "@mui/material/styles";
@@ -380,7 +381,14 @@ function Homepage() {
         </div>
       </div>
       <div className="right">
-        <div className="adds"></div>
+        <div className="adds">
+          <AdSense.Google
+            client="ca-pub-7292810486004926"
+            slot="7806394673"
+            style={{ display: "block" }}
+            format="auto"
+          />
+        </div>
         <Tooltip title={"Listeners: " + users.length} placement="top">
           <div className="currentStation">~{path}~</div>
         </Tooltip>

@@ -17,6 +17,8 @@ import axiosInstance from "./pages/Login/Axios";
 import AdminMAIN from "./pages/Administrator/AdminMAIN";
 import AdminSELL from "./pages/Administrator/AdminSELL";
 import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
+import StripeFinal from "./pages/Administrator/AdminStripe/StripeFinal";
+import Complete from "./pages/Administrator/AdminStripe/Complete";
 export const socket = new io("https://serpas1.onrender.com");
 export let stations = [];
 let setStations = () => {};
@@ -53,6 +55,8 @@ function App() {
               <Redirect to="/96" />
             </Route>
             <PrivateRoute exact path="/admin/stripe" component={StripeBegin} />
+            <PrivateRoute exact path="/admin/completed" component={Complete} />
+            <PrivateRoute exact path="/admin/final" component={StripeFinal} />
             <PrivateRoute exact path="/admin" component={AdminMAIN} />
             {stations.map((path) => (
               <PrivateRoute
