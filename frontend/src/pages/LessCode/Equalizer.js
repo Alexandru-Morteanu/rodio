@@ -41,7 +41,7 @@ export const Equalizer = ({ room, nr }) => {
     function handleResize() {
       const eqSize = Math.min(window.innerWidth / 15, 70);
       console.log(eqSize);
-      setEqWidth(`${eqSize}px`);
+      setEqWidth(eqSize);
     }
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -91,8 +91,8 @@ export const Equalizer = ({ room, nr }) => {
         <div key={index}>
           <div
             style={{
-              width: eqWidth,
-              height: eqWidth / 2,
+              width: `${eqWidth}px`,
+              height: `${eqWidth / 2}px`,
               position: "relative",
             }}
           >
