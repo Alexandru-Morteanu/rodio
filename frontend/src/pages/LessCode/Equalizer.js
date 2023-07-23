@@ -64,7 +64,6 @@ export const Equalizer = ({ room, nr }) => {
     socket.emit("getHigh" + nr, parseFloat(event.target.value), room);
     setHighFreq(parseInt(event.target.value));
   };
-
   return (
     <div
       style={{
