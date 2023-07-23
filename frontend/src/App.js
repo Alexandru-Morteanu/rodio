@@ -19,7 +19,7 @@ import AdminSELL from "./pages/Administrator/AdminSELL";
 import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
 import StripeFinal from "./pages/Administrator/AdminStripe/StripeFinal";
 import Complete from "./pages/Administrator/AdminStripe/Complete";
-import Navigation from "./pages/LessCode/Navigation";
+// import Navigation from "./pages/LessCode/Navigation";
 export const socket = new io("https://serpas1.onrender.com");
 export let stations = [];
 let setStations = () => {};
