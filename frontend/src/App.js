@@ -74,7 +74,7 @@ function App() {
             <Route path="/signup" component={SignUp} />
             <Route path="/market" key="key" component={MarketPlace} />
             <Route exact path="/">
-              <Redirect to="/96" />
+              <Redirect to="/login" />
             </Route>
             <PrivateRoute exact path="/admin/stripe" component={StripeBegin} />
             <PrivateRoute exact path="/admin/completed" component={Complete} />

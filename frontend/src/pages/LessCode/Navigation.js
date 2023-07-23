@@ -6,7 +6,7 @@ function Navigation() {
     console.log(where);
     switch (where) {
       case "home":
-        history.push("/");
+        history.push("/96");
         break;
       case "market":
         history.push("/market");
