@@ -35,29 +35,7 @@ module.exports = (app) => {
             email: email,
           },
         });
-        const account_id = "acct_1NVxhHR9HTJDj3Jg";
-        if (account_id) {
-          const account = await stripe.accounts.retrieve(account_id);
-          console.log(account.requirements.currently_due);
-          const update = await stripe.accounts.update(account_id, {
-            tos_acceptance: {
-              date: Math.floor(Date.now() / 1000),
-              ip: req.ip,
-            },
-            business_profile: {
-              mcc: 5950,
-              url: "https://google.com",
-            },
-            business_type: "individual",
-            individual: {
-              first_name: first_name,
-              last_name: last_name,
-              phone: phoneNumber,
-              email: email,
-            },
-          });
-          console.log(update);
-        }
+        console.log(account.id);
         if (account.id) {
           await userCollection.updateOne(
             { email: email_check },
