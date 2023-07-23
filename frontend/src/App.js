@@ -54,14 +54,14 @@ function App() {
       className="App"
       style={{ display: "flex", flexDirection: "column", gap: 30 }}
     >
-      <Router>
-        {/* <Navigation /> */}
-        <div
-          className={containerClass}
-          style={{
-            padding: "40px 0",
-          }}
-        >
+      {/* <Navigation /> */}
+      <div
+        className={containerClass}
+        style={{
+          padding: "40px 0",
+        }}
+      >
+        <Router>
           <Switch>
             {stations.map((path, index) => (
               <Route
@@ -95,9 +95,9 @@ function App() {
                 key={path.station}
               />
             ))}
-          </Switch>
-        </div>
-      </Router>
+          </Switch>{" "}
+        </Router>
+      </div>
     </div>
   );
 }
