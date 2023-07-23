@@ -10,7 +10,7 @@ import Homepage_base from "./Homepage_less/Homepage_base";
 import Homepage_mobile from "./Homepage_less/Homepage_mobile";
 export let localPeerId;
 function Homepage() {
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(true);
   const location = useLocation();
   const [path, setPath] = useState(location.pathname.split("/"));
   const [index, setIndex] = useState(
@@ -28,7 +28,6 @@ function Homepage() {
   let [high2, setHigh2] = useState(0);
   let [vol1, setVol1] = useState(0);
   let [vol2, setVol2] = useState(0);
-  let [k, setK] = useState(0);
   let [streamPrimit, setStreamPrimit] = useState(0);
   const history = useHistory();
   let [users, setUsers] = useState([]);
@@ -37,6 +36,7 @@ function Homepage() {
   const audioContext = useRef(new AudioContext());
   const stream1Node = useRef(null);
   const stream2Node = useRef(null);
+  const analyserNode = useRef(null);
   const lowNode1 = useRef(null);
   const midNode1 = useRef(null);
   const highNode1 = useRef(null);
@@ -51,6 +51,7 @@ function Homepage() {
   let checked = useRef(0);
   useEffect(() => {
     if (!paused && audioElement1.current.srcObject) {
+      requestAnimationFrame(drawVisualizer);
       audioElement1.current.play();
     } else if (paused && audioElement1.current.srcObject) {
       audioElement1.current.pause();
@@ -209,43 +210,42 @@ function Homepage() {
         audioContext.current.createMediaStreamSource(stream1);
       console.log(stream1Node.current);
 
-      const analyserNode = audioContext.current.createAnalyser();
-      analyserNode.fftSize = 2048;
+      analyserNode.current = audioContext.current.createAnalyser();
+      analyserNode.current.fftSize = 2048;
 
-      stream1Node.current.connect(analyserNode);
-      const canvas = document.getElementById("visualizer");
-      const canvasCtx = canvas.getContext("2d");
-      function drawVisualizer() {
-        const bufferLength = analyserNode.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        analyserNode.getByteFrequencyData(dataArray);
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-          barHeight = dataArray[i];
-
-          canvasCtx.fillStyle = "rgb(215, 158, 0)";
-          canvasCtx.fillRect(
-            x,
-            canvas.height - barHeight / 2,
-            barWidth,
-            barHeight / 2
-          );
-
-          x += barWidth + 1;
-        }
-
-        requestAnimationFrame(drawVisualizer);
-      }
-
+      stream1Node.current.connect(analyserNode.current);
       drawVisualizer();
     }
   }, [stream1]);
+  function drawVisualizer() {
+    if (paused) return;
+    const canvas = document.getElementById("visualizer");
+    const canvasCtx = canvas.getContext("2d");
+    const bufferLength = analyserNode.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    analyserNode.current.getByteFrequencyData(dataArray);
+    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      barHeight = dataArray[i];
+
+      canvasCtx.fillStyle = "rgb(215, 158, 0)";
+      canvasCtx.fillRect(
+        x,
+        canvas.height - barHeight / 2,
+        barWidth,
+        barHeight / 2
+      );
+
+      x += barWidth + 1;
+    }
+    requestAnimationFrame(drawVisualizer);
+  }
 
   useEffect(() => {
     if (stream2) {
@@ -265,14 +265,14 @@ function Homepage() {
               console.log("stream1 modified");
               audioElement1.current.srcObject = stream;
               setStream1(stream);
-              audioElement1.current.play();
+              if (!paused) audioElement1.current.play();
               streamPrimit = 1;
             } else if (call.metadata === "stream2") {
               console.log("stream2 modified");
               audioElement2.current.srcObject = stream;
               audioElement2.current.volume = 1;
               setStream2(stream);
-              audioElement2.current.play();
+              if (!paused) audioElement2.current.play();
               streamPrimit = 0;
             }
           } catch (e) {
@@ -362,61 +362,6 @@ function Homepage() {
           path={path}
         />
       )}
-
-      {/* <div className="left">
-        <div className="label">
-          <div className="logo">
-            <b>SERPAS</b>
-          </div>
-          <div onClick={handleGet} className="getStart">
-            <Link className="get" to="/signup">
-              Get Started
-            </Link>
-          </div>
-        </div>
-        <canvas id="visualizer"></canvas>
-        <div className="top">TOP</div>
-        <div className="liderboard">
-          <ul>{items}</ul>
-          <ul>{items}</ul>
-          <ul>{items}</ul>
-        </div>
-        <div className="buttons">
-          <Box sx={{ width: "100%", overflow: "hidden" }}>
-            <Widget>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mt: -1,
-                }}
-              >
-                <IconButton onClick={prevPath} aria-label="previous song">
-                  <FastRewindRounded fontSize="large" htmlColor={"#000"} />
-                </IconButton>
-                <PauseBTN paused={paused} setPaused={setPaused} />
-                <IconButton onClick={nextPath} aria-label="next song">
-                  <FastForwardRounded fontSize="large" htmlColor={"#000"} />
-                </IconButton>
-              </Box>
-            </Widget>
-          </Box>
-        </div>
-      </div>
-      <div className="right">
-        <div className="adds">
-          <AdSense.Google
-            client="ca-pub-7292810486004926"
-            slot="7806394673"
-            style={{ display: "block" }}
-            format="auto"
-          />
-        </div>
-        <Tooltip title={"Listeners: " + users.length} placement="top">
-          <div className="currentStation">~{path}~</div>
-        </Tooltip>
-      </div> */}
     </div>
   );
 }

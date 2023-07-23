@@ -19,7 +19,7 @@ import AdminSELL from "./pages/Administrator/AdminSELL";
 import StripeBegin from "./pages/Administrator/AdminStripe/StripeBegin";
 import StripeFinal from "./pages/Administrator/AdminStripe/StripeFinal";
 import Complete from "./pages/Administrator/AdminStripe/Complete";
-// import Navigation from "./pages/LessCode/Navigation";
+import Navigation from "./pages/LessCode/Navigation";
 export const socket = new io("https://serpas1.onrender.com");
 export let stations = [];
 let setStations = () => {};
@@ -54,14 +54,14 @@ function App() {
       className="App"
       style={{ display: "flex", flexDirection: "column", gap: 30 }}
     >
-      {/* <Navigation /> */}
-      <div
-        className={containerClass}
-        style={{
-          padding: "40px 0",
-        }}
-      >
-        <Router>
+      <Router>
+        <Navigation />
+        <div
+          className={containerClass}
+          style={{
+            padding: "40px 0",
+          }}
+        >
           <Switch>
             {stations.map((path, index) => (
               <Route
@@ -96,8 +96,8 @@ function App() {
               />
             ))}
           </Switch>{" "}
-        </Router>
-      </div>
+        </div>
+      </Router>
     </div>
   );
 }
