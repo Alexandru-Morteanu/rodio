@@ -50,18 +50,18 @@ function App() {
     }
   }
   return (
-    <div
-      className="App"
-      style={{ display: "flex", flexDirection: "column", gap: 30 }}
-    >
-      <Navigation />
+    <Router>
       <div
-        className={containerClass}
-        style={{
-          padding: "40px 0",
-        }}
+        className="App"
+        style={{ display: "flex", flexDirection: "column", gap: 30 }}
       >
-        <Router>
+        <Navigation />
+        <div
+          className={containerClass}
+          style={{
+            padding: "40px 0",
+          }}
+        >
           <Switch>
             {stations.map((path, index) => (
               <Route
@@ -96,9 +96,9 @@ function App() {
               />
             ))}
           </Switch>
-        </Router>
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
 export default App;
