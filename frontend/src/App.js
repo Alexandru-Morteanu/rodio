@@ -50,11 +50,11 @@ function App() {
     }
   }
   return (
-    <Router>
-      <div
-        className="App"
-        style={{ display: "flex", flexDirection: "column", gap: 30 }}
-      >
+    <div
+      className="App"
+      style={{ display: "flex", flexDirection: "column", gap: 30 }}
+    >
+      <Router>
         <Navigation />
         <div
           className={containerClass}
@@ -97,8 +97,8 @@ function App() {
             ))}
           </Switch>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </div>
   );
 }
 export default App;
