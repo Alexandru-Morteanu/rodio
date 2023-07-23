@@ -55,7 +55,7 @@ function App() {
       style={{ display: "flex", flexDirection: "column", gap: 30 }}
     >
       <Router>
-        <Navigation />
+        {/* <Navigation /> */}
         <div
           className={containerClass}
           style={{
