@@ -24,9 +24,21 @@ export let stations = [];
 let setStations = () => {};
 function App() {
   [stations, setStations] = useState([]);
+  const [containerClass, setContainerClass] = useState(
+    window.innerWidth > 700 ? "container" : "container_mobile"
+  );
   useEffect(() => {
     handleRefresh();
     console.log(socket);
+    const handleResize = () => {
+      setContainerClass(
+        window.innerWidth > 700 ? "container" : "container_mobile"
+      );
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
   async function handleRefresh() {
     try {
@@ -38,7 +50,12 @@ function App() {
   }
   return (
     <div className="App">
-      <div className="container">
+      <div
+        className={containerClass}
+        style={{
+          padding: "40px 0",
+        }}
+      >
         <Router>
           <Switch>
             {stations.map((path, index) => (

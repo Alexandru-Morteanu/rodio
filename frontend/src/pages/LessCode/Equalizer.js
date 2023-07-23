@@ -29,12 +29,27 @@ export const Equalizer = ({ room, nr }) => {
   const [lowFreq, setLowFreq] = useState(0);
   const [midFreq, setMidFreq] = useState(0);
   const [highFreq, setHighFreq] = useState(0);
+  const [eqWidth, setEqWidth] = useState(`${window.innerWidth}px`);
 
   useEffect(() => {
     socket.emit("getLow" + nr, lowFreq);
     socket.emit("getMid" + nr, midFreq);
     socket.emit("getHigh" + nr, highFreq);
   }, []);
+
+  useEffect(() => {
+    function handleResize() {
+      const eqSize = Math.min(window.innerWidth / 15, 70);
+      console.log(eqSize);
+      setEqWidth(`${eqSize}px`);
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   const handleLowFreqChange = (event) => {
     socket.emit("getLow" + nr, parseFloat(event.target.value), room);
     setLowFreq(parseInt(event.target.value));
@@ -76,8 +91,8 @@ export const Equalizer = ({ room, nr }) => {
         <div key={index}>
           <div
             style={{
-              width: 70,
-              height: 30,
+              width: eqWidth,
+              height: eqWidth / 2,
               position: "relative",
             }}
           >

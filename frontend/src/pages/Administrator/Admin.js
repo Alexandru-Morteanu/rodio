@@ -236,12 +236,27 @@ function Admin() {
   function handleAdd() {
     hiddenFileInput.current.click();
   }
-
+  const [circleWidth, setCircleWidth] = useState(`${window.innerWidth / 5}px`);
+  const [listWidth, setListWidth] = useState(`${window.innerWidth / 4}px`);
+  useEffect(() => {
+    function handleResize() {
+      const circleSize = Math.min(window.innerWidth / 5, 150);
+      const listSize = Math.min(window.innerWidth / 4, 200);
+      setCircleWidth(`${circleSize}px`);
+      setListWidth(`${listSize}px`);
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   const DropArea = ({ area, f }) => {
     const [{ canDrop, isOver, item }, drop] = useDrop({
       accept: "rectangle",
       drop: async (item) => {
         console.log(item.id);
+        console.log(f[item.index]);
         if (area === 1) {
           console.log(f);
           audioElement1.src = URL.createObjectURL(f[item.index]);
@@ -280,8 +295,8 @@ function Admin() {
       <div
         ref={drop}
         style={{
-          width: 160,
-          height: 160,
+          width: circleWidth,
+          height: circleWidth,
           background: "black",
           borderRadius: "50%",
           display: "flex",
@@ -314,7 +329,7 @@ function Admin() {
           <div
             style={{
               height: "90%",
-              width: 200,
+              width: listWidth,
             }}
           >
             <ClickButton
@@ -385,7 +400,7 @@ function Admin() {
               </div>
             )}
           </div>
-          <DropArea area={2} className="area2" />
+          <DropArea area={2} f={files} className="area2" />
         </div>
       </DndProvider>
       <div className="buttons_admin">

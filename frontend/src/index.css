@@ -1,8 +1,12 @@
 body {
-  background: linear-gradient(to right, orange, rgb(0, 59, 95));
+  background: no-repeat linear-gradient(to right, orange, rgb(0, 59, 95));
   margin: 0;
-  height: 100vh;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+html, body {
+  overflow-x: hidden;
+  min-height: 100%;
 }

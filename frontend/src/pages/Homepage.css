@@ -1,10 +1,13 @@
-.containerHome{
+.containerHome, .containerHome_mobile{
     height: 90%;
     width: 90%;
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 0px;
+}
+.containerHome_mobile{
+    height: auto;
 }
 ul {
     list-style-type: none;

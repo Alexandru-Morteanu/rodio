@@ -1,30 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Homepage.css";
-import AdSense from "react-adsense";
-import { Link, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { socket, stations } from "../App";
-import { styled, useTheme } from "@mui/material/styles";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
-import FastRewindRounded from "@mui/icons-material/FastRewindRounded";
-import FastForwardRounded from "@mui/icons-material/FastForwardRounded";
 import Peer from "peerjs";
-import { Box, IconButton, Tooltip } from "@mui/material";
-import { red } from "@mui/material/colors";
-import PauseBTN from "./LessCode/PauseBTN";
 import axiosInstance from "./Login/Axios";
+import Homepage_base from "./Homepage_less/Homepage_base";
+import Homepage_mobile from "./Homepage_less/Homepage_mobile";
 export let localPeerId;
-const Widget = styled("div")(({ theme }) => ({
-  padding: 16,
-  borderRadius: 16,
-  width: 200,
-  maxWidth: "20%",
-  margin: "auto",
-  position: "relative",
-  zIndex: 1,
-  backgroundColor: red,
-  backdropFilter: "blur(40px)",
-}));
 function Homepage() {
   const [paused, setPaused] = useState(false);
   const location = useLocation();
@@ -298,14 +282,30 @@ function Homepage() {
       });
     }
   }, [peer]);
+
+  const getInitialContainerClass = () => {
+    return window.innerWidth > 700 ? "containerHome" : "containerHome_mobile";
+  };
+
+  const [containerClass, setContainerClass] = useState(
+    getInitialContainerClass
+  );
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   useEffect(() => {
     console.log("New client connected");
     console.log(path[1]);
-    return () => {};
+    const handleResize = () => {
+      setContainerClass(
+        window.innerWidth > 700 ? "containerHome" : "containerHome_mobile"
+      );
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
-  useEffect(() => {
-    //history.push(path[1])
-  }, [path]);
   function prevPath() {
     try {
       Cookies.remove("visitorId");
@@ -338,8 +338,32 @@ function Homepage() {
     <li key={index}>{"~96.6~"}</li>
   ));
   return (
-    <div className="containerHome">
-      <div className="left">
+    <div className={containerClass}>
+      {windowWidth > 700 ? (
+        <Homepage_base
+          handleGet={handleGet}
+          items={items}
+          prevPath={prevPath}
+          paused={paused}
+          setPaused={setPaused}
+          nextPath={nextPath}
+          users={users}
+          path={path}
+        />
+      ) : (
+        <Homepage_mobile
+          handleGet={handleGet}
+          items={items}
+          prevPath={prevPath}
+          paused={paused}
+          setPaused={setPaused}
+          nextPath={nextPath}
+          users={users}
+          path={path}
+        />
+      )}
+
+      {/* <div className="left">
         <div className="label">
           <div className="logo">
             <b>SERPAS</b>
@@ -392,7 +416,7 @@ function Homepage() {
         <Tooltip title={"Listeners: " + users.length} placement="top">
           <div className="currentStation">~{path}~</div>
         </Tooltip>
-      </div>
+      </div> */}
     </div>
   );
 }
