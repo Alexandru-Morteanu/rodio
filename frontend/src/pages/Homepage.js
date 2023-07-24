@@ -338,7 +338,12 @@ function Homepage() {
     <li key={index}>{"~96.6~"}</li>
   ));
   return (
-    <div className={containerClass}>
+    <div
+      className={containerClass}
+      style={{
+        fontFamily: "'Asap', sans-serif",
+      }}
+    >
       {windowWidth > 700 ? (
         <Homepage_base
           handleGet={handleGet}
