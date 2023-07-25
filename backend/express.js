@@ -327,7 +327,32 @@ appRouter.get("/", async (req, res) => {
     res.status(500).json("error");
   }
 });
+appRouter.get("/top", async (req, res) => {
+  try {
+    const allStations = await stationCollection.find();
+    const stationSet = new Set();
+    const countSet = new Set();
+    allStations.forEach((item) => {
+      stationSet.add(item.station);
+      countSet.add(item.visitors);
+    });
+    const stationList = Array.from(stationSet);
+    const countList = Array.from(countSet);
+    console.log(countList);
+    console.log(stationList);
+    const indexes = Array.from(countList.keys());
+    indexes.sort((a, b) => countList[b] - countList[a]);
 
+    const sortedCount = indexes.map((index) => countList[index]);
+    const sortedList = indexes.map((index) => stationList[index]);
+
+    console.log(sortedCount);
+    console.log(sortedList);
+    res.json({ sortedList: sortedList, sortedCount: sortedCount });
+  } catch (error) {
+    res.status(500).json("error");
+  }
+});
 appRouter.get("/admin", verifyJWT, async (req, res) => {
   console.log(req.user);
   try {

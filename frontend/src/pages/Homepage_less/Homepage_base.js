@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../Homepage.css";
 import AdSense from "react-adsense";
 import { Link } from "react-router-dom";
@@ -8,6 +8,8 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 import PauseBTN from "../LessCode/PauseBTN";
 import styled from "@emotion/styled";
 import { red } from "@mui/material/colors";
+import { useLocation } from "react-router-dom/cjs/react-router-dom";
+import axiosInstance from "../Login/Axios";
 const Widget = styled("div")(({ theme }) => ({
   padding: 16,
   borderRadius: 16,
@@ -21,14 +23,18 @@ const Widget = styled("div")(({ theme }) => ({
 }));
 function Homepage_base({
   handleGet,
-  items,
   prevPath,
   paused,
   setPaused,
   nextPath,
   users,
   path,
+  items,
+  itemsCount,
 }) {
+  const item = items.map((item, index) => (
+    <li key={index}>{`~${item}~(${itemsCount[index]})`}</li>
+  ));
   return (
     <>
       <div className="left">
@@ -45,9 +51,7 @@ function Homepage_base({
         <canvas id="visualizer"></canvas>
         <div className="top">TOP</div>
         <div className="liderboard">
-          <ul>{items}</ul>
-          <ul>{items}</ul>
-          <ul>{items}</ul>
+          <ul>{item}</ul>
         </div>
         <div className="buttons">
           <Box sx={{ width: "100%", overflow: "hidden" }}>

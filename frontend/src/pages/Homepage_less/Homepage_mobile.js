@@ -28,7 +28,11 @@ function Homepage_mobile({
   nextPath,
   users,
   path,
+  itemsCount,
 }) {
+  const item = items.map((item, index) => (
+    <li key={index}>{`~${item}~(${itemsCount[index]})`}</li>
+  ));
   return (
     <div>
       <div className="left">
@@ -45,9 +49,7 @@ function Homepage_mobile({
         <canvas id="visualizer"></canvas>
         <div className="top">TOP</div>
         <div className="liderboard">
-          <ul>{items}</ul>
-          <ul>{items}</ul>
-          <ul>{items}</ul>
+          <ul>{item}</ul>
         </div>
         <div className="buttons">
           <Box sx={{ width: "100%", overflow: "hidden" }}>

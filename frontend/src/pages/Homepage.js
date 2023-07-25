@@ -48,6 +48,9 @@ function Homepage() {
   const isNewVisitor = !Cookies.get("visitorId");
   let [stream1, setStream1] = useState(null);
   let [stream2, setStream2] = useState(null);
+  let [items, setItems] = useState([]);
+  let [itemsCount, setItemsCount] = useState([]);
+
   let checked = useRef(0);
   useEffect(() => {
     if (!paused && audioElement1.current.srcObject) {
@@ -59,6 +62,10 @@ function Homepage() {
   }, [paused]);
 
   async function check() {
+    const res = await axiosInstance.get("/top");
+    console.log(res.data.stationList);
+    setItems(res.data.sortedList);
+    setItemsCount(res.data.sortedCount);
     if (isNewVisitor && checked.current === 0) {
       checked.current = 1;
       console.log("new");
@@ -265,14 +272,14 @@ function Homepage() {
               console.log("stream1 modified");
               audioElement1.current.srcObject = stream;
               setStream1(stream);
-              if (!paused) audioElement1.current.play();
+              audioElement1.current.play();
               streamPrimit = 1;
             } else if (call.metadata === "stream2") {
               console.log("stream2 modified");
               audioElement2.current.srcObject = stream;
               audioElement2.current.volume = 1;
               setStream2(stream);
-              if (!paused) audioElement2.current.play();
+              audioElement2.current.play();
               streamPrimit = 0;
             }
           } catch (e) {
@@ -334,9 +341,9 @@ function Homepage() {
   function handleGet() {
     history.push("/signup");
   }
-  const items = Array.from({ length: 9 }, (_, index) => (
-    <li key={index}>{"~96.6~"}</li>
-  ));
+  // const items = Array.from({ length: 9 }, (_, index) => (
+  //   <li key={index}>{"~96.6~"}</li>
+  // ));
   return (
     <div
       className={containerClass}
@@ -347,24 +354,26 @@ function Homepage() {
       {windowWidth > 700 ? (
         <Homepage_base
           handleGet={handleGet}
-          items={items}
           prevPath={prevPath}
           paused={paused}
           setPaused={setPaused}
           nextPath={nextPath}
           users={users}
           path={path}
+          items={items}
+          itemsCount={itemsCount}
         />
       ) : (
         <Homepage_mobile
           handleGet={handleGet}
-          items={items}
           prevPath={prevPath}
           paused={paused}
           setPaused={setPaused}
           nextPath={nextPath}
           users={users}
           path={path}
+          items={items}
+          itemsCount={itemsCount}
         />
       )}
     </div>
